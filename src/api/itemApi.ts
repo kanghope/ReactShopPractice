@@ -29,12 +29,7 @@ export const registerItem = async (formData: FormData): Promise<string> => {
         });
         return response.data as string;
     } catch (error) {
-        /*if (axios.isAxiosError(error) && error.response) {
-            const errorData = error.response.data;
-            let errorMessage = Array.isArray(errorData) ? errorData.join(' / ') : errorData;
-            throw new Error(errorMessage || '상품 등록에 실패했습니다.');
-        }
-        throw new Error('네트워크 오류가 발생했습니다.');*/
+        
         // AxiosError를 ErrorResponseData 타입으로 단언하여 메시지에 접근합니다.
         if (axios.isAxiosError(error) && error.response) {
             const status = error.response.status;
