@@ -18,7 +18,7 @@ import type {
 const API_ADMIN_BASE_URL = '/admin/item';
 
 /**
- * 상품 등록 (POST /api/admin/item/new)
+ * 상품 등록 (POST /api/admin/item/new) i love han!!!
  * @param formData ItemFormDto 및 이미지 파일 리스트
  * @returns 성공 메시지
  */
