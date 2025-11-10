@@ -82,7 +82,7 @@ const ItemManagePage: React.FC = () => {
     const handlePageChange = (page: number) => {
         // 1. searchForm 객체를 [key, value] 쌍의 배열로 변환합니다.
         // 2. 각 값(value)을 문자열로 안전하게 변환합니다. (null/undefined 처리 포함)
-        const searchEntries = Object.entries(searchForm)
+        const searchEntries = Object.entries(searchForm)//이 객체의 **모든 속성(키-값 쌍)**을 [키, 값] 형태의 배열로 변환하여 반환합니다.
         .filter(([, value]) => value !== null && value !== undefined) // null 또는 undefined 값 제외
         .map(([key, value]) => [key, String(value)]); // 모든 값을 문자열로 변환
 
@@ -93,7 +93,7 @@ const ItemManagePage: React.FC = () => {
     newSearchParams.set('page', page.toString());
     
     // URL을 변경하여 useEffect를 트리거하고 목록을 다시 로드합니다.
-    navigate(`/admin/items?${newSearchParams.toString()}`);
+    navigate(`/admin/item/items?${newSearchParams.toString()}`);
     };
     
     // -------------------------------------------------------------
@@ -120,7 +120,7 @@ const ItemManagePage: React.FC = () => {
         .map(([key, value]) => [key, String(value)]); // 모든 값을 문자열로 변환
         const newSearchParams = new URLSearchParams(searchEntries);
         newSearchParams.set('page', '0');
-        navigate(`/admin/items?${newSearchParams.toString()}`);
+        navigate(`/admin/item/items?${newSearchParams.toString()}`);
     };
 
     // -------------------------------------------------------------

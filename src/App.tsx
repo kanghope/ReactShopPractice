@@ -37,7 +37,7 @@ const App: React.FC = () => {
                  ======================================================= */}
             
             {/* 1. 상품 목록 조회 및 검색 */}
-            <Route path="/admin/items" element={<ItemManagePage />} />
+            <Route path="/admin/item/items" element={<ItemManagePage />} />
 
             {/* 2. 상품 등록 및 수정 (같은 컴포넌트를 사용하며 :itemId 유무로 등록/수정 구분) */}
             <Route path="/admin/item/new" element={<ItemFormPage />} />

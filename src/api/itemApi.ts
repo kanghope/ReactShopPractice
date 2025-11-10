@@ -122,7 +122,7 @@ export const updateItem = async (itemId: number, formData: FormData): Promise<st
 };
 
 /**
- * 상품 관리 목록 조회 (GET /api/admin/items)
+ * 상품 관리 목록 조회 (GET /api/admin/item/items)
  * @param searchDto 검색 조건
  * @param page 페이지 번호 (0-based)
  * @param size 페이지 크기
@@ -146,7 +146,7 @@ export const getItemManageList = async (
     }
 
     try {
-        const response = await apiClient.get<PageResponse<ItemListContentDto>>(`/admin/items?${params.toString()}`);
+        const response = await apiClient.get<PageResponse<ItemListContentDto>>(`/admin/item/items?${params.toString()}`);
         return response.data;
     } catch (error) {
         console.error("상품 목록 조회 오류:", error);

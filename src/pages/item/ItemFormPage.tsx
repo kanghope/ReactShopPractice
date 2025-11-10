@@ -89,10 +89,15 @@ const ItemFormPage: React.FC = () => {
             if (value !== '' && isNaN(processedValue as number)) return; 
         }
 
-        setFormData(prev => ({
-            ...prev,
-            [name]: processedValue as any // 타입 캐스팅으로 DTO 구조 유지
-        }));
+        setFormData(
+            prev => 
+            (
+                {
+                    ...prev,
+                    [name]: processedValue as any // 타입 캐스팅으로 DTO 구조 유지
+                }
+            )
+        );
 
         // 에러 초기화
         setFieldErrors(prev => ({ ...prev, [name]: null }));
@@ -180,7 +185,7 @@ const ItemFormPage: React.FC = () => {
                 : await registerItem(form);
 
             alert(isEditMode ? `상품 수정 성공: ${resultMessage}` : `상품 등록 성공: ${resultMessage}`);
-            navigate('/admin/items'); 
+            navigate('/admin/item/items'); 
 
         } catch (error) {
             const err = error as Error;

@@ -78,7 +78,7 @@ return (
     </li>
     <li className="nav-item">
             {/* ⭐️ getNavLinkClass 적용 */}
-     <Link className={getNavLinkClass("/admin/items")} to="/admin/items" onClick={handleLinkClick}>상품 관리</Link>
+     <Link className={getNavLinkClass("/admin/item/items")} to="/admin/item/items" onClick={handleLinkClick}>상품 관리</Link>
     </li>
     </>
    )}
