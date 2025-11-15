@@ -25,7 +25,8 @@ export const registerMember = async (data: MemberForm): Promise<string> => {
         const response = await apiClient.post(`${API_BASE_URL}/new`, data);
         return response.data;
 
-    } catch (error) {
+    } catch (error) 
+    {
         // AxiosError를 ErrorResponseData 타입으로 단언하여 메시지에 접근합니다.
         if (axios.isAxiosError(error) && error.response) {
             const status = error.response.status;
@@ -34,26 +35,33 @@ export const registerMember = async (data: MemberForm): Promise<string> => {
             
             let serverErrorMessage: string;
 
-            // ⭐️ 수정된 로직: 배열 형태의 응답을 처리 (유효성 검사 오류일 가능성 높음)
-            if (typeof errorData === 'object' && errorData !== null && !('message' in errorData)) {
-                // errorData가 { 0: "msg1", 1: "msg2" } 형태일 때, 모든 값을 하나의 문자열로 합칩니다.
-                const messages = Object.values(errorData);
-                if (messages.length > 0 && messages.every(msg => typeof msg === 'string')) {
-                    serverErrorMessage = (messages as string[]).join('; ');
-                } else {
-                    // JSON 객체이지만 message 필드가 없는 경우 (예외 DTO 형식을 따르지 않는 경우)
-                    serverErrorMessage = `회원가입 요청 실패: 서버 응답 (${status})`;
+            // ⭐️ 수정된 로직: 서버에서 필드-에러 메시지 맵을 반환할 경우 (400 Bad Request 등 유효성 검사 오류)
+            if (typeof errorData === 'object' && errorData !== null) {
+                // errorData가 { itemNm: "필수 항목입니다", price: "0보다 커야 합니다" } 형태일 때
+                // 일반적인 ErrorResponseData 형식이 아닐 경우 (필드 에러)
+                if (!('message' in errorData)) {
+                    // 필드 에러를 위한 전체 메시지 생성 (전체 오류 메시지로 사용할 용도)
+                    const messages = Object.values(errorData);
+                    serverErrorMessage = messages.length > 0 && messages.every(msg => typeof msg === 'string') 
+                        ? (messages as string[]).join('; ') 
+                        : `상품 등록에 실패했습니다.: 서버 응답 (${status})`;
+
+                    // 💡 중요: 필드 에러 객체를 그대로 cause의 data에 담아 프론트엔드로 전파합니다.
+                    throw new Error(serverErrorMessage, {
+                        cause: { status, data: errorData as Record<string, string> }
+                    });
+                } 
+                // 기존 로직: ErrorResponseData 형식일 때
+                else { 
+                    serverErrorMessage = (errorData as ErrorResponseData).message;
                 }
-            }
-            // 기존 로직: ErrorResponseData 형식일 때
-            else if (typeof errorData === 'object' && errorData !== null && 'message' in errorData) {
-                 serverErrorMessage = errorData.message;
             }
             // 문자열이거나 기타 예상치 못한 형태일 때
             else {
-                serverErrorMessage = `회원가입 요청 실패: 서버 응답 (${status})`;
+                serverErrorMessage = `상품 등록에 실패했습니다.: 서버 응답 (${status})`;
             }
 
+            // ErrorResponseData 형식이나 일반 문자열 에러일 경우의 처리
             throw new Error(serverErrorMessage, {
                 cause: { status, data: errorData }
             });

@@ -31,6 +31,7 @@ apiClient.interceptors.request.use(
     },
     (error) => {
         return Promise.reject(error);
+        //받은 error 객체를 Promise.reject(error)로 감싸서 반환합니다. 이는 오류를 즉시 전파하여 API 호출의 catch 블록으로 넘어가도록 합니다.
     }
 );
 

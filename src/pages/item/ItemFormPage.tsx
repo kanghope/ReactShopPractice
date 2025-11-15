@@ -154,7 +154,7 @@ const ItemFormPage: React.FC = () => {
             // 서버는 이 ID 리스트와 함께 전송된 파일 리스트를 비교하여 이미지 업데이트/삭제를 처리해야 함
             itemFormDtoToSubmit.itemImgIds = formData.itemImgDtoList
                 .map(img => img.id)
-                .filter((id): id is number => id !== null); 
+                //.filter((id): id is number => id !== null); 
         }
 
         form.append('itemFormDto', new Blob([JSON.stringify(itemFormDtoToSubmit)], {
@@ -162,27 +162,27 @@ const ItemFormPage: React.FC = () => {
         }));
 
         // 2. 이미지 파일 (MultipartFile 리스트)
-        // 파일이 선택된 경우에만 'itemImgFile' 이름으로 FormData에 추가
-        itemImgFiles.forEach((file, index) => {
+        itemImgFiles.forEach((file, index) => { 
+            const fieldName = 'itemImgFile'; 
+            
             if (file) {
-                // name="itemImgFile"로 서버에 전송
-                form.append('itemImgFile', file); 
-            } else if (isEditMode && formData.itemImgDtoList[index].id !== null) {
-                // 수정 모드에서 파일이 변경되지 않고 기존 이미지가 있는 경우:
-                // 서버의 MultipartFile List와 itemImgIds List를 매칭하기 위해
-                // 해당 위치에 **빈 파일**을 보내 기존 이미지가 유지되도록 처리할 수 있습니다.
-                // Spring Boot의 경우 빈 파일(길이 0)은 무시되므로, 기존 이미지를 유지하는 로직은 itemImgIds로 판단하는 것이 일반적입니다.
-                // 여기서는 Thymeleaf 예제의 `name="itemImgFile"`이 파일이 없는 경우에도 빈 요소로 전송된다는 가정하에
-                // 명시적으로 null을 보내지 않고, 파일이 있을 때만 추가하여 서버가 itemImgFiles 리스트의 크기를 다르게 받도록 합니다.
-                // Spring Controller의 정확한 로직에 따라 이 부분은 조정될 수 있습니다. (현재 코드는 파일이 있을 때만 append)
+                // A. 새 파일 전송 (등록/수정 공통)
+                form.append(fieldName, file);
+            } else if (isEditMode) {
+                // B. 수정 모드일 때, 파일이 없으면 무조건 빈 파일(Placeholder)을 전송
+                // 이 파일은 ID가 null이면 INSERT를 막고, ID가 Long이면 UPDATE를 막아 기존 이미지를 유지
+                const emptyFile = new File([], `placeholder_img${index}`, { type: 'application/octet-stream' });
+                form.append(fieldName, emptyFile);
+            } else {
+                // C. 등록 모드일 때, 파일이 없으면 전송하지 않음 (서버 List<MultipartFile>의 크기를 줄임)
             }
         });
-
+        
         try {
             const id = isEditMode ? parseInt(itemId!, 10) : null;
             const resultMessage = id
-                ? await updateItem(id, form)
-                : await registerItem(form);
+                ? await updateItem(id, form) // ⬅️ updateItem 함수는 PUT 요청을 보내야 함
+                : await registerItem(form); // ⬅️ registerItem 함수는 POST 요청을 보내야 함
 
             alert(isEditMode ? `상품 수정 성공: ${resultMessage}` : `상품 등록 성공: ${resultMessage}`);
             navigate('/admin/item/items'); 

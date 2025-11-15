@@ -21,6 +21,9 @@ export interface AuthContextType {
     user: User;
     isAuthenticated: boolean;
     isAdmin: boolean;
+    // login 함수 타입 수정 (User 인터페이스와 맞춤)
     login: (accessToken: string, refreshToken: string, userId: string, userRole: UserRole) => void;
+    // role만 업데이트하는 setAuthData 함수 추가 (이전에 AuthProvider에 있던 함수)
+    setAuthData: (data: { role: string | null }) => void;
     logout: () => void;
 }

@@ -13,11 +13,22 @@ export default defineConfig({
     // ⭐️ API 요청을 스프링 부트 서버로 전달하도록 프록시 설정
     proxy: {
       // React에서 '/api'로 시작하는 모든 요청이 프록시 됩니다.
+      // 1. '/api'로 시작하는 모든 요청 (인증, 관리자 API 등)을 8080으로 전달
       '/api': {
-        // Spring Boot 서버의 주소로 요청을 전달
         target: 'http://localhost:8080', 
-        changeOrigin: true, // 호스트 헤더를 백엔드 서버에 맞게 변경 (일반적으로 필수)
-        // rewrite: (path) => path.replace(/^\/api/, ''), // Spring Boot API가 '/api' 접두사를 포함하면 이 줄은 주석 처리합니다.
+        changeOrigin: true, 
+      },
+      
+      // 2. '/items' 메인 페이지 상품 목록 API 요청을 8080으로 전달
+      '/items': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+
+      // 3. 🖼️ '/images' 상품 이미지 요청을 8080으로 전달 (이미지 경로 문제 해결)
+      '/images': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
       },
     },
   }

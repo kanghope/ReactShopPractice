@@ -8,7 +8,8 @@ import type {
     ItemListContentDto, 
     ItemSearchDto,
     ErrorResponseData,
-    PageResponse 
+    PageResponse ,
+    MainItemDto// ⭐️ MainItemDto import 추가
 } from '../types/item.ts';
 
 // -------------------------------------------------------------
@@ -107,7 +108,7 @@ export const updateItem = async (itemId: number, formData: FormData): Promise<st
         // PUT 대신 POST 또는 PATCH를 사용하여 MultiPart/form-data를 전송할 수 있도록 Spring 서버 설정을 가정합니다.
         // 또는 Spring Controller에서 PUT 요청을 MultiPart로 받도록 설정을 변경해야 합니다.
         // 일반적인 웹 환경을 고려하여 POST 요청으로 서버에 업데이트 요청을 보낸다고 가정합니다.
-        const response = await apiClient.post(`${API_ADMIN_BASE_URL}/${itemId}`, formData, {
+        const response = await apiClient.put(`${API_ADMIN_BASE_URL}/${itemId}`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
         return response.data as string;
@@ -131,7 +132,7 @@ export const updateItem = async (itemId: number, formData: FormData): Promise<st
 export const getItemManageList = async (
     searchDto: ItemSearchDto, 
     page: number = 0, 
-    size: number = 10 // 기본 사이즈는 Spring Boot 기본값인 10으로 설정
+    size: number = 5 // 기본 사이즈는 Spring Boot 기본값인 10으로 설정
 ): Promise<PageResponse<ItemListContentDto>> => {
     
     // URLSearchParams를 사용하여 쿼리스트링 생성
@@ -151,5 +152,93 @@ export const getItemManageList = async (
     } catch (error) {
         console.error("상품 목록 조회 오류:", error);
         throw new Error('상품 목록을 불러오는 데 실패했습니다.');
+    }
+};
+
+/**
+ * 메인 페이지 상품 목록 및 검색 API 호출 (GET /items)
+ * @param itemSearchDto 검색 조건 (searchQuery만 주로 사용됨)
+ * @param page 현재 페이지 번호 (0-based)
+ * @param size 페이지 당 항목 수
+ * @returns PageResponse<MainItemDto>
+ */
+export const getMainItems = async (
+    itemSearchDto: Pick<ItemSearchDto, 'searchQuery'>, // 메인 페이지에서는 searchQuery만 필요
+    page: number = 0,
+    size: number = 6 // 메인 페이지 기본 페이지 크기 6
+): Promise<PageResponse<MainItemDto>> => {
+    try {
+        // URLSearchParams를 사용하여 쿼리스트링 생성
+        const params = new URLSearchParams({
+            searchQuery: itemSearchDto.searchQuery || '',
+            page: page.toString(),
+            size: size.toString(),
+        });
+
+        // 🚨 메인 페이지 엔드포인트: 백엔드 ItemController의 "/" 또는 "/items"로 가정합니다.
+        const response = await apiClient.get<PageResponse<MainItemDto>>(`/items?${params.toString()}`);
+        
+        return response.data;
+
+    } catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+            const status = error.response.status;
+            const errorData = error.response.data;
+            const serverErrorMessage = errorData?.message || `상품 목록 조회 실패: 서버 응답 (${status})`;
+
+            throw new Error(serverErrorMessage, {
+                cause: { status, data: errorData }
+            });
+        }
+        throw new Error('네트워크 오류가 발생했습니다.');
+    }
+};
+/**
+ * 주문 API 호출 (POST /order)
+ */
+export const orderItem = async (itemId: number, count: number): Promise<string> => {
+    // 실제 백엔드 경로는 '/api/order' 또는 이와 유사한 형태여야 합니다.
+    const url = '/order'; 
+    const paramData = { itemId, count };
+
+    try {
+        // CSRF 토큰 처리는 apiClient 설정을 통해 자동으로 처리되거나,
+        // 필요 시 요청 헤더에 직접 포함해야 합니다. (Thymeleaf 스크립트 기반)
+        const response = await apiClient.post(url, paramData);
+        return "주문이 완료 되었습니다."; // 또는 서버가 반환하는 메시지
+    } catch (error) {
+        // ... (오류 처리 로직)
+         if (axios.isAxiosError(error) && error.response) {
+             if (error.response.status === 401) {
+                 throw new Error('401: 로그인 후 이용해주세요');
+             }
+             const errorData = error.response.data as { message?: string };
+             throw new Error(errorData?.message || `주문 처리 실패: ${error.response.status}`);
+         }
+         throw new Error('네트워크 오류가 발생했습니다.');
+    }
+};
+
+/**
+ * 장바구니 담기 API 호출 (POST /cart)
+ */
+export const addCart = async (itemId: number, count: number): Promise<string> => {
+    // 실제 백엔드 경로는 '/api/cart' 또는 이와 유사한 형태여야 합니다.
+    const url = '/cart';
+    const paramData = { itemId, count };
+
+    try {
+        const response = await apiClient.post(url, paramData);
+        return "상품을 장바구니에 담았습니다."; // 또는 서버가 반환하는 메시지
+    } catch (error) {
+         // ... (오류 처리 로직)
+         if (axios.isAxiosError(error) && error.response) {
+             if (error.response.status === 401) {
+                 throw new Error('401: 로그인 후 이용해주세요');
+             }
+             const errorData = error.response.data as { message?: string };
+             throw new Error(errorData?.message || `장바구니 담기 실패: ${error.response.status}`);
+         }
+         throw new Error('네트워크 오류가 발생했습니다.');
     }
 };

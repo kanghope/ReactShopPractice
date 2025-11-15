@@ -12,6 +12,8 @@ import SocialCallbackPage from './pages/auth/SocialCallbackPage';
 // 새로 추가된 관리자 페이지 임포트
 import ItemManagePage from './pages/item/ItemManagePage'; // 확장자 추가
 import ItemFormPage from './pages/item/ItemFormPage'; // 확장자 추가
+// ⭐️ 상품 상세 페이지 임포트 추가
+import ItemDetailPage from './pages/item/ItemDetailPage'; // ⬅️ 이 부분을 추가해야 합니다.
 
 const App: React.FC = () => {
   return (
@@ -24,6 +26,9 @@ const App: React.FC = () => {
           <Routes>
             {/* 메인 페이지 */}
             <Route path="/" element={<MainPage />} />
+
+            {/* ⭐️ 상품 상세 보기 라우트 추가 */}
+            <Route path="/item/:itemId" element={<ItemDetailPage />} />
             
             {/* 회원/인증 관련 페이지 */}
             <Route path="/members/login" element={<MemberLoginPage />} />

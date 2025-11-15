@@ -28,7 +28,7 @@ export interface TokenResponse {
     refreshToken: string;
     accessTokenExpiresIn: number;
     // ⭐ Thymeleaf 환경처럼 헤더에 사용자 이름을 표시하기 위해 기본 정보 포함
-    memberId: number;
+    id: number;
     email: string;
     memberName: string;
     role: 'USER' | 'ADMIN'; // 사용자 역할 추가
@@ -37,7 +37,7 @@ export interface TokenResponse {
  * 사용자 프로필 정보 타입 (GET /members/profile 응답 기준)
  */
 export interface MemberProfile {
-    memberId: number;
+    id: number;
     email: string;
     name: string;
     address: string;
