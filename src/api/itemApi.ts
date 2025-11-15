@@ -206,6 +206,7 @@ export const orderItem = async (itemId: number, count: number): Promise<string> 
         // 필요 시 요청 헤더에 직접 포함해야 합니다. (Thymeleaf 스크립트 기반)
         const response = await apiClient.post(url, paramData);
         return "주문이 완료 되었습니다."; // 또는 서버가 반환하는 메시지
+        //return response.data;
     } catch (error) {
         // ... (오류 처리 로직)
          if (axios.isAxiosError(error) && error.response) {
