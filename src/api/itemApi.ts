@@ -242,3 +242,33 @@ export const addCart = async (itemId: number, count: number): Promise<string> =>
          throw new Error('네트워크 오류가 발생했습니다.');
     }
 };
+
+/**
+ * ⭐️ 일반 사용자용 상품 상세 정보 조회 (GET /api/item/{itemId})
+ * @param itemId 상품 ID
+ * @returns ItemFormDto 
+ */
+export const getPublicItemDetail = async (itemId: number): Promise<ItemFormDto> => {
+    try {
+        // 🚨 경로를 '/item/{itemId}'로 변경
+        const response = await apiClient.get<Omit<ItemFormDto, 'itemImgFiles'>>(`/item/${itemId}`); 
+        
+        // getItemDetail과 동일한 로직으로 ItemFormDto를 완성
+        const itemDtoFromServer = response.data;
+        return {
+            ...itemDtoFromServer,
+            itemImgFiles: new Array(5).fill(null) as (File | null)[], 
+        } as ItemFormDto;
+    } catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+            const status = error.response.status;
+            const errorData = error.response.data;
+            const serverErrorMessage = errorData?.message || `상품 목록 조회 실패: 서버 응답 (${status})`;
+
+            throw new Error(serverErrorMessage, {
+                cause: { status, data: errorData }
+            });
+        }
+        throw new Error('상품 정보를 불러오는 데 실패했습니다.');
+    }
+};

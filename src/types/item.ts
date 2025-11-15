@@ -34,7 +34,7 @@ export interface ItemFormDto {
     itemImgDtoList: ItemImgDto[];
 
     // 서버에 전송 시 사용할 기존 이미지 ID 목록 (선택 사항, 필요에 따라 추가)
-    itemImgIds?: number[]; 
+    itemImgIds?: (number | null )[]; 
 }
 
 /**
@@ -56,6 +56,17 @@ export interface ItemListContentDto {
     itemSellStatus: ItemSellStatus;
     createdBy: string;
     regTime: string; // 등록일 (ISO String)
+}
+
+/**
+ * 메인 페이지 상품 목록 DTO (백엔드 MainItemDto와 동일)
+ */
+export interface MainItemDto {
+    id: number;
+    itemNm: string;
+    itemDetail: string;
+    imgUrl: string | null; // 대표 이미지가 없을 수도 있으므로 null 허용
+    price: number;
 }
 
 /**

@@ -2,12 +2,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 // 인증 상태를 확인하는 useAuth 훅이 있다고 가정합니다. (이전에 구현하셨던 구조를 따름)
 import { useAuth } from '../../hooks/useAuth'; 
-import { getItemDetail } from '../../api/itemApi';
 import type { ItemFormDto, ItemSellStatus } from '../../types/item';
 
 // 🚨 주의: 주문하기 및 장바구니 담기 API는 현재 itemApi.ts에 정의되어 있지 않아 
 // 이전 요청에서 사용된 목업 함수를 재현합니다. 실제 API 엔드포인트에 맞춰 수정해야 합니다.
-import { orderItem, addCart } from '../../api/itemApi'; 
+import { getPublicItemDetail, orderItem, addCart } from '../../api/itemApi'; 
 
 
 // Thymeleaf에서 사용된 ItemSellStatus 상수를 프론트엔드에서 참조하기 위한 상수
@@ -47,8 +46,8 @@ const ItemDetailPage: React.FC = () => {
         
         setIsLoading(true);
         try {
-            // getItemDetail API 서비스 호출
-            const data = await getItemDetail(itemId);
+            // getPublicItemDetail API 서비스 호출
+            const data = await getPublicItemDetail(itemId);
             setItem(data);
             setError(null);
         } catch (e) {
