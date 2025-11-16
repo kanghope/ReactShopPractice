@@ -14,6 +14,8 @@ import ItemManagePage from './pages/item/ItemManagePage'; // 확장자 추가
 import ItemFormPage from './pages/item/ItemFormPage'; // 확장자 추가
 // ⭐️ 상품 상세 페이지 임포트 추가
 import ItemDetailPage from './pages/item/ItemDetailPage'; // ⬅️ 이 부분을 추가해야 합니다.
+// ⭐️ 구매 이력 페이지 컴포넌트 임포트 추가
+import OrderHistoryPage from './pages/order/OrderHistoryPage';
 
 const App: React.FC = () => {
   return (
@@ -51,7 +53,9 @@ const App: React.FC = () => {
             {/* 임시 경로 (Header 메뉴 대응) */}
             
             <Route path="/cart" element={<div className="text-center py-5">장바구니 페이지 (개발중)</div>} />
-            <Route path="/orders" element={<div className="text-center py-5">구매이력 페이지 (개발중)</div>} />
+
+            {/* ⭐️ /orders 경로에 OrderHistoryPage 컴포넌트를 연결 */}
+            <Route path="/orders" element={<OrderHistoryPage />} />
             
             {/* 404 Not Found */}
             <Route path="*" element={<div className="text-center py-5">404 - 페이지를 찾을 수 없습니다.</div>} />

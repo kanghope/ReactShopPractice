@@ -6,7 +6,12 @@ import type { ItemFormDto, ItemSellStatus } from '../../types/item';
 
 // 🚨 주의: 주문하기 및 장바구니 담기 API는 현재 itemApi.ts에 정의되어 있지 않아 
 // 이전 요청에서 사용된 목업 함수를 재현합니다. 실제 API 엔드포인트에 맞춰 수정해야 합니다.
-import { getPublicItemDetail, orderItem, addCart } from '../../api/itemApi'; 
+import { getPublicItemDetail } from '../../api/itemApi'; 
+import { orderItem, addCart } from '../../api/orderApi'; // 주문 및 장바구니 API 함수
+
+// -------------------------------------------------------------
+// 상품 상세 페이지 컴포넌트
+// -------------------------------------------------------------
 
 
 // Thymeleaf에서 사용된 ItemSellStatus 상수를 프론트엔드에서 참조하기 위한 상수

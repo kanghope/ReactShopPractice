@@ -193,56 +193,7 @@ export const getMainItems = async (
         throw new Error('네트워크 오류가 발생했습니다.');
     }
 };
-/**
- * 주문 API 호출 (POST /order)
- */
-export const orderItem = async (itemId: number, count: number): Promise<string> => {
-    // 실제 백엔드 경로는 '/api/order' 또는 이와 유사한 형태여야 합니다.
-    const url = '/order'; 
-    const paramData = { itemId, count };
 
-    try {
-        // CSRF 토큰 처리는 apiClient 설정을 통해 자동으로 처리되거나,
-        // 필요 시 요청 헤더에 직접 포함해야 합니다. (Thymeleaf 스크립트 기반)
-        const response = await apiClient.post(url, paramData);
-        return "주문이 완료 되었습니다."; // 또는 서버가 반환하는 메시지
-        //return response.data;
-    } catch (error) {
-        // ... (오류 처리 로직)
-         if (axios.isAxiosError(error) && error.response) {
-             if (error.response.status === 401) {
-                 throw new Error('401: 로그인 후 이용해주세요');
-             }
-             const errorData = error.response.data as { message?: string };
-             throw new Error(errorData?.message || `주문 처리 실패: ${error.response.status}`);
-         }
-         throw new Error('네트워크 오류가 발생했습니다.');
-    }
-};
-
-/**
- * 장바구니 담기 API 호출 (POST /cart)
- */
-export const addCart = async (itemId: number, count: number): Promise<string> => {
-    // 실제 백엔드 경로는 '/api/cart' 또는 이와 유사한 형태여야 합니다.
-    const url = '/cart';
-    const paramData = { itemId, count };
-
-    try {
-        const response = await apiClient.post(url, paramData);
-        return "상품을 장바구니에 담았습니다."; // 또는 서버가 반환하는 메시지
-    } catch (error) {
-         // ... (오류 처리 로직)
-         if (axios.isAxiosError(error) && error.response) {
-             if (error.response.status === 401) {
-                 throw new Error('401: 로그인 후 이용해주세요');
-             }
-             const errorData = error.response.data as { message?: string };
-             throw new Error(errorData?.message || `장바구니 담기 실패: ${error.response.status}`);
-         }
-         throw new Error('네트워크 오류가 발생했습니다.');
-    }
-};
 
 /**
  * ⭐️ 일반 사용자용 상품 상세 정보 조회 (GET /api/item/{itemId})
