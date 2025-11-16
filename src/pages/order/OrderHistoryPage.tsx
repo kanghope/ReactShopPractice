@@ -1,27 +1,8 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useOrderHistory } from '../../hooks/useOrderHistory.tsx'; // ⭐️ 커스텀 훅 임포트
 
-// ⭐️ cancelBulkOrders 임포트 추가
-import { getOrderHistory, cancelOrderApi, cancelBulkOrders } from '../../api/orderApi';
-import type { OrderHistDto } from '../../types/order'; 
-import type { PageResponse } from '../../types/item'; 
 
-// -------------------------------------------------------------
-// 상수 및 초기 상태 정의
-// -------------------------------------------------------------
-
-const MAX_PAGE_BUTTONS = 5; 
-const PAGE_SIZE = 4; // Spring Controller의 기본값과 일치
-
-const initialPageResponse : PageResponse<OrderHistDto> = {
-    content: [],
-    number: 0,
-    totalPages: 0,
-    totalElements: 0,
-    first: true,
-    last: true,
-    size: PAGE_SIZE,
-};
 
 // -------------------------------------------------------------
 // 주문 이력 페이지 컴포넌트
@@ -31,56 +12,22 @@ const OrderHistoryPage: React.FC = () => {
     // URLSearchParams를 사용하여 페이지 번호를 관리
     const [searchParams, setSearchParams] = useSearchParams(); 
     
-    const [ordersPage, setOrdersPage] = useState<PageResponse<OrderHistDto>>(initialPageResponse);
-    const [loading, setLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
-
-    // ⭐️ 선택된 주문 ID 목록 상태
-    const [selectedOrderIds, setSelectedOrderIds] = useState<Set<number>>(new Set());
-
-    const currentPage = useMemo(() => {
-        // URL의 'page' 파라미터는 0-based
-        const pageParam = searchParams.get('page');
-        return pageParam ? parseInt(pageParam, 10) : 0;
-    }, [searchParams]);
-
-    // ⭐️ 페이지가 변경되거나 로드될 때마다 선택 상태 초기화
-    useEffect(() => {
-        setSelectedOrderIds(new Set());
-    }, [ordersPage.number]);
-
-    /**
-     * 🚀 주문 목록 로드 함수
-     */
-    const loadOrderHistory = useCallback(async (page: number) => {
-        setLoading(true);
-        setError(null);
-        try{
-            // 백엔드는 0-based 페이지를 받으므로 그대로 전달
-            const data = await getOrderHistory(page, PAGE_SIZE);
-            
-            setOrdersPage(data);
-            setLoading(false);
-        }
-        catch (err) {
-            console.error("주문 이력 로드 오류:", err);
-            const errorMessage = err instanceof Error ? err.message : "주문 이력 로드 실패";
-            setError(errorMessage);
-            setLoading(false);
-            setOrdersPage(initialPageResponse);
-
-            // 401 에러(cause: 401) 시 로그인 페이지로 리다이렉트
-            if (err instanceof Error && err.cause === 401) {
-                navigate('/members/login');
-            }
-        }
-    },[navigate]);
-
-    // 🔄 컴포넌트 마운트 및 페이지 번호 변경 시 데이터 로드
-    useEffect(() => {
-        // currentPage는 useMemo로 URL 변경 시마다 업데이트됨
-        loadOrderHistory(currentPage);
-    }, [currentPage, loadOrderHistory]);
+    // ⭐️ 커스텀 훅에서 모든 상태와 로직을 가져옵니다.
+    const {
+        ordersPage,
+        loading,
+        error,
+        currentPage,
+        startPage,
+        endPage,
+        cancellableOrderIds,
+        selectedOrderIds,
+        isAllSelected,
+        handleCancelOrder,
+        handleBulkCancel,
+        toggleOrderSelection,
+        toggleAllSelection,
+    } = useOrderHistory();
 
     /**
      * ➡️ 페이지네이션 버튼 클릭 핸들러 (URL 업데이트)
@@ -92,126 +39,7 @@ const OrderHistoryPage: React.FC = () => {
         navigate(`/orders?${newParams.toString()}`); 
     };
 
-    // -------------------------------------------------------------
-    // ⭐️ 체크박스 관련 핸들러
-    // -------------------------------------------------------------
-
-    // 취소 가능한 주문 ID 목록 (전체 선택을 위해 사용)
-    const cancellableOrderIds = useMemo(() => 
-        ordersPage.content
-            .filter(order => order.orderStatus === 'ORDER')
-            .map(order => order.orderId)
-    , [ordersPage.content]);
-
-    // 전체 선택/해제 상태
-    const isAllSelected = selectedOrderIds.size > 0 && selectedOrderIds.size === cancellableOrderIds.length;
     
-    // 개별 체크박스 토글
-    const toggleOrderSelection = (orderId: number, isCancellable: boolean) => {
-        if (!isCancellable) return; // 취소 불가능한 주문은 선택할 수 없음
-
-        setSelectedOrderIds(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(orderId)) {
-                newSet.delete(orderId);
-            } else {
-                newSet.add(orderId);
-            }
-            return newSet;
-        });
-    };
-
-    // 전체 선택/해제 토글
-    const toggleAllSelection = () => {
-        if (isAllSelected) {
-            setSelectedOrderIds(new Set()); // 전체 해제
-        } else {
-            // 취소 가능한 모든 주문을 선택
-            setSelectedOrderIds(new Set(cancellableOrderIds)); 
-        }
-    };
-
-    /**
-     * ❌ 주문 취소 핸들러
-     */
-    const handleCancelOrder = async (orderId: number) => {
-        if (!window.confirm('정말로 주문을 취소하시겠습니까?')) {
-            return;
-        }
-
-        try {
-            await cancelOrderApi(orderId);
-            window.alert("주문이 취소되었습니다.");
-            
-            // 취소 후 현재 페이지를 다시 로드하여 목록 업데이트
-            loadOrderHistory(currentPage); 
-
-        } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : "주문 취소 실패";
-            window.alert(errorMessage);
-            
-            if (err instanceof Error && err.cause === 401) {
-                navigate('/members/login');
-            }
-        }
-    };
-
-    /**
-     * ❌ ⭐️ 선택된 주문 일괄 취소 핸들러
-     */
-    const handleBulkCancel = async () => {
-        const idsToCancel = Array.from(selectedOrderIds);
-
-        if (idsToCancel.length === 0) {
-            window.alert('취소할 주문을 선택해주세요.');
-            return;
-        }
-
-        if (!window.confirm(`${idsToCancel.length}건의 주문을 일괄 취소하시겠습니까?`)) {
-            return;
-        }
-
-        try {
-            const message = await cancelBulkOrders(idsToCancel);
-            window.alert(message);
-            
-            // 성공 후 선택 상태 초기화 및 목록 새로고침
-            setSelectedOrderIds(new Set());
-            loadOrderHistory(currentPage);
-
-        } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : "일괄 주문 취소 실패";
-            window.alert(errorMessage);
-
-            if (err instanceof Error && err.cause === 401) {
-                navigate('/members/login');
-            }
-        }
-    }
-
-    /**
-     * 🔢 페이지네이션 범위 계산 (Thymeleaf 로직 재현)
-     */
-    const { startPage, endPage } = useMemo(() => {
-        const number = ordersPage.number; // 현재 페이지 (0-based)
-        const totalPages = ordersPage.totalPages;
-
-        // start: (number / maxPage) * maxPage + 1 (1-based)
-        const start = Math.floor(number / MAX_PAGE_BUTTONS) * MAX_PAGE_BUTTONS + 1;
-
-        // end: start + (maxPage - 1) 또는 totalPages 중 작은 값 (1-based)
-        let end = start + (MAX_PAGE_BUTTONS - 1);
-        
-        if (totalPages === 0) {
-            end = 1;
-        } else if (end > totalPages) {
-            end = totalPages;
-        }
-        
-        // 0-based index로 반환
-        return { startPage: start - 1, endPage: end - 1 };
-    }, [ordersPage.number, ordersPage.totalPages]);
-
     // -------------------------------------------------------------
     // JSX 렌더링
     // -------------------------------------------------------------
