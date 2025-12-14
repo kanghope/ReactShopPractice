@@ -195,7 +195,7 @@ const MainPage: React.FC = () => {
                                     style={{ height: '400px', objectFit: 'cover' }}
                                 />
                                 <div className="card-body">
-                                    <h5 className="card-title">**{item.itemNm}**</h5>
+                                    <h5 className="card-title">{item.itemNm}</h5>
                                     <p className="card-text text-muted" style={{ 
                                         textOverflow: 'ellipsis', 
                                         whiteSpace: 'nowrap', 
@@ -203,7 +203,7 @@ const MainPage: React.FC = () => {
                                     }}>
                                         {item.itemDetail}
                                     </p>
-                                    <h4 className="card-title text-danger">**{item.price.toLocaleString()}원**</h4>
+                                    <h4 className="card-title text-danger">{item.price.toLocaleString()}원</h4>
                                 </div>
                             </a>
                         </div>
