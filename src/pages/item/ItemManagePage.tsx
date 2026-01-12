@@ -25,7 +25,7 @@ const initialPageResponse: PageResponse<ItemListContentDto> = {
     number: 0, 
     first: true,
     last: true,
-    size: 10, // API에서 설정한 기본값
+    size: 5, // API에서 설정한 기본값
     totalElements: 0,
 };
 
@@ -82,7 +82,7 @@ const ItemManagePage: React.FC = () => {
     const handlePageChange = (page: number) => {
         // 1. searchForm 객체를 [key, value] 쌍의 배열로 변환합니다.
         // 2. 각 값(value)을 문자열로 안전하게 변환합니다. (null/undefined 처리 포함)
-        const searchEntries = Object.entries(searchForm)
+        const searchEntries = Object.entries(searchForm)//이 객체의 **모든 속성(키-값 쌍)**을 [키, 값] 형태의 배열로 변환하여 반환합니다.
         .filter(([, value]) => value !== null && value !== undefined) // null 또는 undefined 값 제외
         .map(([key, value]) => [key, String(value)]); // 모든 값을 문자열로 변환
 
@@ -93,7 +93,7 @@ const ItemManagePage: React.FC = () => {
     newSearchParams.set('page', page.toString());
     
     // URL을 변경하여 useEffect를 트리거하고 목록을 다시 로드합니다.
-    navigate(`/admin/items?${newSearchParams.toString()}`);
+    navigate(`/admin/item/items?${newSearchParams.toString()}`);
     };
     
     // -------------------------------------------------------------
@@ -120,7 +120,7 @@ const ItemManagePage: React.FC = () => {
         .map(([key, value]) => [key, String(value)]); // 모든 값을 문자열로 변환
         const newSearchParams = new URLSearchParams(searchEntries);
         newSearchParams.set('page', '0');
-        navigate(`/admin/items?${newSearchParams.toString()}`);
+        navigate(`/admin/item/items?${newSearchParams.toString()}`);
     };
 
     // -------------------------------------------------------------
@@ -189,6 +189,30 @@ const ItemManagePage: React.FC = () => {
         );
     };
 
+    /**
+ * ISO 형식의 날짜 문자열을 'YYYY.MM.DD 시분초' 형식으로 포맷합니다.
+ * @param {string} isoString - '2025-11-12T22:42:41.011+09:00' 형태의 문자열
+ * @returns {string} - '2025.11.12 22:42:41' 형태의 문자열
+ */
+const formatDateTime = (isoString : string) => {
+    // 1. Date 객체 생성
+    const date = new Date(isoString);
+
+    // 2. 각 구성 요소 추출
+    const year = date.getFullYear();
+    // getMonth()는 0부터 시작하므로 +1, 두 자릿수 맞추기 위해 padStart 사용
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    
+    // getHours(), getMinutes(), getSeconds()는 로컬 시간대 기준
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+
+    // 3. 원하는 형식으로 조합
+    return `${year}.${month}.${day} ${hours}:${minutes}:${seconds}`;
+};
+
     // -------------------------------------------------------------
     // 7. 렌더링
     // -------------------------------------------------------------
@@ -228,7 +252,7 @@ const ItemManagePage: React.FC = () => {
                                         </td>
                                         <td>{item.itemSellStatus === 'SELL' ? '판매중' : '품절'}</td>
                                         <td>{item.createdBy}</td>
-                                        <td>{item.regTime}</td>
+                                        <td>{formatDateTime(item.regTime)}</td>
                                     </tr>
                                 ))
                             ) : (

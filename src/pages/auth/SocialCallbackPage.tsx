@@ -11,19 +11,29 @@ const SocialCallbackPage : React.FC = () =>
 
     useEffect( () => {
         // 1. URL 쿼리 파라미터에서 토큰 및 사용자 정보 추출
-        const accessToken = searchParams.get('accessToken');
-        const refreshToken = searchParams.get('refreshToken');
+        //const accessToken = searchParams.get('accessToken');
+        //const refreshToken = searchParams.get('refreshToken');
+
         const userId = searchParams.get('userId');
         const role = searchParams.get('role');
         // const accessTokenExpiresIn = searchParams.get('accessTokenExpiresIn');
 
+        // 서버에서 에러 메시지가 쿼리 파라미터로 전달된 경우 처리
+        const errorParam = searchParams.get('error');
+
+        if (errorParam) {
+            console.error("소셜 로그인 서버 오류:", errorParam);
+            navigate('/members/login', { state: { error: errorParam } });
+            return;
+        }
+
         // 2. 필수 정보가 모두 있는지 확인
-        if (accessToken && refreshToken && userId && role) {
+        if (userId && role) {
             try {
                 // 3. AuthContext의 login 함수를 호출하여 상태 저장
                 login(
-                    accessToken,
-                    refreshToken,
+                    '', // Access Token은 쿠키로 처리되므로 빈 문자열 전달
+                    '', // Refresh Token은 쿠키로 처리되므로 빈 문자열 전달
                     userId,
                     role as UserRole
                 );
