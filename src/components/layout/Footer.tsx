@@ -64,6 +64,8 @@ const Footer: React.FC = () => {
             </h3>
             <h3 className="!text-slate-600 !font-bold !uppercase !tracking-tight !flex !items-start !gap-2"> 
               2.백엔드 : JavaSpring Boot, 클라우드 MyBatis 오라클DB 연동, Marven 환경설정 </h3>
+              <h3 className="!text-slate-600 !font-bold !uppercase !tracking-tight !flex !items-start !gap-2"> 
+              3.배포 및 서버 : 우분트 설치후 Docker를 활용하여 빌드후 Azure 클라우드 서버에 배포</h3>
         </div>
       </div>
       {/* Copyright (부트스트랩 footer-copyright 영역) */}
