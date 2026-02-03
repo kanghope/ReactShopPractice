@@ -27,6 +27,12 @@
     // 이전 오류를 해결하기 위해 필요하다면 여기에 추가해야 합니다.
     // "esModuleInterop": true, 
     // "allowSyntheticDefaultImports": true
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
   },
   "include": [
     "src/**/*.ts",

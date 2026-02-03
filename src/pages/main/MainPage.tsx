@@ -1,10 +1,12 @@
 // pages/main/MainPage.tsx
 
-import React,{ useState, useEffect, useCallback, useMemo, type FormEvent} from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback, useMemo, type FormEvent} from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
 import { getMainItems } from '../../api/itemApi';
 import type { PageResponse, MainItemDto } from '../../types/item';
 import mainlogo from '../../assets/images/mainlogo.png';
+import { Loader2, Search } from 'lucide-react';
+import { PagingCon } from '@/components/common/PagingCon';
 
 // -------------------------------------------------------------
 // 상수 정의
@@ -27,8 +29,8 @@ const initialPageResponse : PageResponse<MainItemDto> = {
 // -------------------------------------------------------------
 // 메인 페이지 컴포넌트
 // -------------------------------------------------------------
-const MainPage: React.FC = () => {
-    const navigate = useNavigate(); 
+const MainPage = () => {
+    //const navigate = useNavigate(); 
     const [searchParams, setSearchParams] = useSearchParams();
     
     // API 응답 데이터 상태
@@ -107,7 +109,7 @@ const MainPage: React.FC = () => {
     };
 
     /**
-     * 🔢 페이지네이션 범위 계산 (Thymeleaf 로직 재현)
+     * 🔢 페이지네이션 범위 계산
      */
     const { startPage, endPage } = useMemo(() => {
         const number = itemsPage.number; // 현재 페이지 (0-based)
@@ -135,135 +137,133 @@ const MainPage: React.FC = () => {
     // -------------------------------------------------------------
 
     return (
-        <div className="container py-4">
-            {/* 1. 배너 영역 */}
-            <div className="mb-4">
+        <div className="w-full max-w-[1400px] mx-auto px-4 py-6 space-y-10">
+            
+            {/* 1. 배너 영역 (shadcn-like Rounded Banner) */}
+            <div className="relative w-full h-[300px] md:h-[400px] rounded-3xl overflow-hidden shadow-2xl group">
                 <img 
                     src={mainlogo} 
                     alt="Main Banner" 
-                    className="d-block w-100 banner" 
-                    style={{ height: '350px', objectFit: 'cover' }}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-            </div>
-
-            {/* 2. 검색 폼 및 결과 표시 */}
-            <div className="row justify-content-center mb-4">
-                <div className="col-md-6">
-                    <form onSubmit={handleSearchSubmit} className="input-group">
-                        <input
-                            type="text"
-                            className="form-control"
-                            placeholder="상품명을 입력하세요"
-                            value={searchQueryInput}
-                            onChange={(e) => setSearchQueryInput(e.target.value)}
-                        />
-                        <button type="submit" className="btn btn-dark">🔍 검색</button>
-                    </form>
+                <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent flex items-end p-10">
+                    <h2 className="text-white text-3xl md:text-5xl font-bold tracking-tighter">
+                        새로운 시즌, <br/>특별한 컬렉션
+                    </h2>
                 </div>
             </div>
 
-            {currentSearchQuery && (
-                <div className="text-center mb-4">
-                    <p className="h3 font-weight-bold">"{currentSearchQuery}" 검색 결과</p>
-                </div>
-            )}
-            
-            {/* 3. 로딩/에러/결과 없음 */}
-            {loading && <div className="text-center py-5">상품 목록 로딩 중...</div>}
-            {error && <div className="alert alert-danger text-center">{error}</div>}
+            {/* 2. 검색 바 (Floating Search) */}
+            <div className="flex flex-col items-center space-y-6">
+                <form onSubmit={handleSearchSubmit} className="relative w-full max-w-2xl group">
+                    <Search className="!absolute left-4 top-1/2 -translate-y-1/2 !text-slate-400 group-focus-within:!text-blue-600 !transition-colors" size={20} />
+                    <input
+                        type="text"
+                        className="w-full pl-12 pr-28 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm outline-none transition-all focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-lg"
+                        placeholder="찾으시는 상품이 있으신가요?"
+                        value={searchQueryInput}
+                        onChange={(e) => setSearchQueryInput(e.target.value)}
+                    />
+                    <button type="submit" className="absolute right-2 top-2 bottom-2 px-6 !bg-slate-900 !text-white !rounded-xl !font-medium hover:!bg-blue-600 !transition-all active:!scale-95">
+                        검색
+                    </button>
+                </form>
 
-            {!loading && !error && itemsPage.content.length === 0 && (
-                <div className="text-center py-5">
-                    <p className="h4 text-muted">검색된 상품이 없습니다.</p>
+                {currentSearchQuery && (
+                    <h3 className="text-2xl font-semibold text-slate-800 animate-in fade-in slide-in-from-bottom-2">
+                        <span className="text-blue-600">"{currentSearchQuery}"</span> 검색 결과
+                    </h3>
+                )}
+            </div>
+
+            {/* 3. 상품 그리드 영역 */}
+            {loading ? (
+                <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                    <Loader2 className="animate-spin text-blue-600" size={48} />
+                    <p className="text-slate-500 font-medium">상품을 불러오고 있습니다...</p>
                 </div>
-            )}
-            
-            {/* 4. 상품 목록 렌더링 */}
-            <div className="row">
-                {itemsPage.content.map((item) => (
-                    <div className="col-md-4 mb-4" key={item.id}>
-                        <div className="card h-100 shadow-sm">
-                            <a 
-                                href={`/item/${item.id}`} 
-                                className="text-dark" 
-                                onClick={(e) => { e.preventDefault(); navigate(`/item/${item.id}`); }}
-                            >
+            ) : error ? (
+                <div className="bg-red-50 border border-red-100 text-red-600 p-6 rounded-2xl text-center font-medium">
+                    {error}
+                </div>
+            ) : itemsPage.content.length === 0 ? (
+                <div className="text-center py-20">
+                    <p className="text-slate-400 text-xl italic font-light">해당하는 상품이 존재하지 않습니다.</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {itemsPage.content.map((item) => (
+                        <Link 
+                            to={`/item/${item.id}`} 
+                            key={item.id}
+                            className="group flex flex-col bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
+                        >
+                            <div className="relative aspect-square overflow-hidden">
                                 <img 
                                     src={item.imgUrl || 'https://via.placeholder.com/400x400?text=No+Image'} 
-                                    className="card-img-top" 
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                                     alt={item.itemNm} 
-                                    style={{ height: '400px', objectFit: 'cover' }}
                                 />
-                                <div className="card-body">
-                                    <h5 className="card-title">{item.itemNm}</h5>
-                                    <p className="card-text text-muted" style={{ 
-                                        textOverflow: 'ellipsis', 
-                                        whiteSpace: 'nowrap', 
-                                        overflow: 'hidden' 
-                                    }}>
-                                        {item.itemDetail}
-                                    </p>
-                                    <h4 className="card-title text-danger">{item.price.toLocaleString()}원</h4>
+                                {item.price > 100000 && (
+                                    <span className="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded-full backdrop-blur-md">Premium</span>
+                                )}
+                            </div>
+                            <div className="p-5 space-y-2">
+                                <h5 className="text-lg font-bold text-slate-900 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                                    {item.itemNm}
+                                </h5>
+                                <p className="text-slate-500 text-sm line-clamp-2 leading-relaxed h-10">
+                                    {item.itemDetail}
+                                </p>
+                                <div className="pt-2 flex justify-between items-center">
+                                    <span className="text-xl font-black text-rose-600">
+                                        {item.price.toLocaleString()}원
+                                    </span>
+                                    <span className="text-xs text-slate-400 font-medium group-hover:underline">상세보기 →</span>
                                 </div>
-                            </a>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* 5. 페이지네이션 */}
-            {itemsPage.totalPages > 1 && (
-                <nav>
-                    <ul className="pagination justify-content-center mt-4">
-                        {/* 이전 버튼 */}
-                        <li className={`page-item ${itemsPage.first ? 'disabled' : ''}`}>
-                            <a 
-                                className="page-link" 
-                                href="#" 
-                                onClick={(e) => { 
-                                    e.preventDefault(); 
-                                    handlePageChange(currentPage - 1); 
-                                }}
-                            >
-                                <span aria-hidden="true">&laquo; 이전</span>
-                            </a>
-                        </li>
-
-                        {/* 페이지 번호 버튼 */}
-                        {Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map(pageIndex => (
-                            <li 
-                                key={pageIndex} 
-                                className={`page-item ${pageIndex === currentPage ? 'active' : ''}`}
-                            >
-                                <a 
-                                    className="page-link" 
-                                    href="#" 
-                                    onClick={(e) => { 
-                                        e.preventDefault(); 
-                                        handlePageChange(pageIndex); 
-                                    }}
-                                >
-                                    {pageIndex + 1}
-                                </a>
-                            </li>
-                        ))}
-
-                        {/* 다음 버튼 */}
-                        <li className={`page-item ${itemsPage.last ? 'disabled' : ''}`}>
-                            <a 
-                                className="page-link" 
-                                href="#" 
-                                onClick={(e) => { 
-                                    e.preventDefault(); 
-                                    handlePageChange(currentPage + 1); 
-                                }}
-                            >
-                                <span aria-hidden="true">다음 &raquo;</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
+                            </div>
+                        </Link>
+                    ))}
+                </div>
             )}
+
+            {/* 4. 페이지네이션 (Modern shadcn style) */}
+            <PagingCon currentPage = {currentPage} totalPages={itemsPage.totalPages} handlePageChange={handlePageChange} first={itemsPage.first} last={itemsPage.last} startPage={startPage} endPage={endPage} />
+            {/*itemsPage.totalPages > 1 && (
+                <nav className="flex justify-center items-center gap-2 pt-10">
+                    <button 
+                        disabled={itemsPage.first}
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        className="p-2 rounded-lg border border-slate-200 hover:!bg-slate-50 disabled:!opacity-30 transition-all"
+                    >
+                        <ChevronLeft size={20} />
+                    </button>
+
+                    <div className="flex gap-1">
+                        {Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map(pageIndex => (
+                            <button 
+                                key={pageIndex}
+                                onClick={() => handlePageChange(pageIndex)}
+                                className={`w-10 h-10 rounded-lg !text-sm !font-semibold !transition-all !border-slate-200 ${
+                                    pageIndex === currentPage 
+                                    ? '!bg-slate-900 !text-white !shadow-lg !shadow-slate-200 !scale-110 ' 
+                                    : '!text-slate-600 hover:!bg-slate-100'
+                                }`}
+                            >
+                                {pageIndex + 1}
+                            </button>
+                        ))}
+                    </div>
+
+                    <button 
+                        disabled={itemsPage.last}
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        className="p-2 rounded-lg border !border-slate-200 hover:!bg-slate-50 disabled:!opacity-30 transition-all"
+                    >
+                        <ChevronRight size={20} />
+                    </button>
+                </nav>
+            )*/}
         </div>
     );
 };

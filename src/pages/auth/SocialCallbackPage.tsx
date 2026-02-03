@@ -1,9 +1,11 @@
-import React, { useEffect } from 'react';
+import  { useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { type UserRole } from '../../types/auth';
+import { toast } from 'sonner';
 
-const SocialCallbackPage : React.FC = () =>
+
+const SocialCallbackPage  = () =>
 {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
@@ -31,15 +33,24 @@ const SocialCallbackPage : React.FC = () =>
         if (userId && role) {
             try {
                 // 3. AuthContext의 login 함수를 호출하여 상태 저장
+                /*
                 login(
-                    '', // Access Token은 쿠키로 처리되므로 빈 문자열 전달
-                    '', // Refresh Token은 쿠키로 처리되므로 빈 문자열 전달
+                    //'', // Access Token은 쿠키로 처리되므로 빈 문자열 전달
+                    //'', // Refresh Token은 쿠키로 처리되므로 빈 문자열 전달
                     userId,
                     role as UserRole
-                );
-
+                );*/
+                // 3. 리덕스 스토어에 상태 저장
+                 // ✅ 이 호출 한 번으로 Redux 스토어에 데이터가 저장됩니다.
+                login(userId, role as UserRole);
+                //alert('a');
                 // 4. 로그인 성공 후 메인 페이지로 이동
-                navigate('/');
+                //alert('카카오계정으로 로그인 되었습니다.');
+                toast.success('카카오계정으로 로그인 되었습니다.');
+                setTimeout(() => {
+                    navigate('/', { replace: true });
+                }, 2500);
+               // navigate('/');
 
             } catch (error) {
                 console.error("소셜 로그인 처리 중 오류 발생:", error);
@@ -56,13 +67,7 @@ const SocialCallbackPage : React.FC = () =>
 
 // 로딩 중 UI
     return (
-        <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '100vh',
-            fontSize: '1.2rem'
-        }}>
+        <div className="flex justify-center items-center h-screen text-[1.2rem]">
             <p>로그인 처리 중입니다. 잠시만 기다려주세요...</p>
         </div>
     );

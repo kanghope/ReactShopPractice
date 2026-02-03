@@ -30,11 +30,20 @@ export const addCartItem = async (cartItemDto: CartItemDto): Promise<number> => 
             let errorMessage = '장바구니 추가 실패';
             if (typeof errorData === 'object' && 'message' in errorData) {
                  errorMessage = errorData.message || errorMessage;
-            } else if (typeof errorData === 'object' && Object.keys(errorData).length > 0) {
-                 // Map 형태의 유효성 검사 오류 메시지를 결합
-                 errorMessage = Object.values(errorData).join(', ');
             }
-
+            // 1. 에러 데이터가 '객체' 형태이고, 그 안에 내용물(Key)이 하나라도 있는지 확인합니다. 
+            else if (typeof errorData === 'object' && Object.keys(errorData).length > 0) {
+                 // Map 형태의 유효성 검사 오류 메시지를 결합
+                 // 2. 객체 안에 있는 '값(Value)'들만 쏙쏙 뽑아냅니다.
+                // 결과: ["아이디는 5글자 이상...", "비밀번호에...", "이메일 형식이..."]
+                // 3. 뽑아낸 메시지들을 콤마(,)와 공백으로 연결해서 하나의 문장으로 만듭니다.
+                // 결과: "아이디는 5글자 이상..., 비밀번호에..., 이메일 형식이..."
+                 errorMessage = Object.values(errorData).join(', ');//에러 메시지 내용들만 다 모아서 목록(배열)으로 만든다.
+                 //목록에 있는 내용들 사이에 쉼표를 찍어서 보기 좋은 한 문장으로 합친다.
+            }
+            //"이 에러의 원인(cause)은 서버가 보내온 상태 코드(error.response.status)이다."
+            //의미: 에러 객체를 새로 만들어서 던질 때, 단순히 "에러 발생!"이라고만 하지 않고
+            //  **"사실은 서버에서 401(또는 404, 500 등) 번호가 와서 생긴 에러야"**라고 꼬표를 달아두는 것입니다.
             throw new Error(errorMessage, { cause: error.response.status });
         }
         throw new Error('네트워크 오류가 발생했습니다.');

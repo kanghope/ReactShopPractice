@@ -2,23 +2,25 @@ import React, { useState, useEffect, type FormEvent } from 'react'; // ⭐️ Fo
 import AuthFormWrapper from '../../components/common/AuthFormWrapper';
 import { registerMember } from '../../api/memberApi';
 import type { MemberForm } from '../../types/member.ts'; // ⭐️ MemberForm에 'type' 적용
-import { useNavigate, useSearchParams } from 'react-router-dom'; // useSearchParams 추가
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'; // useSearchParams 추가
+import { Lock, Mail, MapPin, MessageCircle, User } from 'lucide-react';
+import { toast } from 'sonner';
 
 // 실제 프로젝트에서는 .env 파일이나 context를 통해 가져올 것입니다.
 const KAKAO_CLIENT_ID = '41995ca715ee4777c817d8ba08ac344f';
-const KAKAO_REDIRECT_URI = 'http://localhost:8080/api/auth/kakao/callback'; 
+const KAKAO_REDIRECT_URI = 'https://shop-app1.azurewebsites.net/api/auth/kakao/callback'; 
 
 const KAKAO_AUTH_URL = 
   `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}`;
 
-
+/*
 const registerMember2 = async (data: MemberForm): Promise<string> => { 
     if (data.email === 'duplicate@test.com') {
         throw new Error('회원가입에 실패했습니다.: ["이미 등록된 이메일입니다."]');
     }
     return "Success"; 
 }; // Mock API
-
+*/
 
 
 
@@ -72,7 +74,8 @@ const MemberJoinPage: React.FC = () => {
       const successMessage = await registerMember(formData);
       
       showMessage(`회원가입 성공: ${successMessage}`); // alert() 대신 showMessage 사용
-      alert(`회원가입 성공: ${successMessage}`);
+      //alert();
+      toast.success(`회원가입 성공: ${successMessage}`);
       navigate('/members/login'); // 성공 시 로그인 페이지로 이동
       
     } catch (error) {
@@ -107,72 +110,97 @@ const MemberJoinPage: React.FC = () => {
     }
   };
 
+  // 공통 스타일
+  const inputStyle = "w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 placeholder:text-slate-400 text-sm";
+  const labelStyle = "block text-sm font-medium text-slate-700 mb-1.5 ml-1";
+  const iconStyle = "absolute left-3 top-9 text-slate-400 h-4 w-4";
+
   return (
     <AuthFormWrapper title="회원가입">
-      <form onSubmit={handleSubmit} method="post">
+      <form onSubmit={handleSubmit} method="post" className="space-y-4">
         {/* 이름 */}
-        <div className="form-group mb-3">
-          <label htmlFor="name">이름</label>
+        <div className="relative flex flex-col">
+          <label htmlFor="name" className={labelStyle}>이름</label>
+          <User className={iconStyle} />
           <input 
-            type="text" name="name" className="form-control" 
-            placeholder="이름을 입력해주세요" value={formData.name} 
-            onChange={handleChange} required
-          />
-        </div>
-        {/* 이메일 */}
-        <div className="form-group mb-3">
-          <label htmlFor="email">이메일주소</label>
-          <input 
-            type="email" name="email" className="form-control" 
-            placeholder="이메일을 입력해주세요" value={formData.email} 
-            onChange={handleChange} required
-          />
-        </div>
-        {/* 비밀번호 */}
-        <div className="form-group mb-3">
-          <label htmlFor="password">비밀번호</label>
-          <input 
-            type="password" name="password" className="form-control" 
-            placeholder="비밀번호 입력 (영문, 숫자, 특수문자 포함 8~16자)" value={formData.password} 
-            onChange={handleChange} required
-          />
-        </div>
-        {/* 주소 */}
-        <div className="form-group mb-4">
-          <label htmlFor="address">주소</label>
-          <input 
-            type="text" name="address" className="form-control" 
-            placeholder="주소를 입력해주세요" value={formData.address} 
+            type="text" name="name" className={inputStyle} 
+            placeholder="홍길동" value={formData.name} 
             onChange={handleChange} required
           />
         </div>
 
-        {/* 서버측 유효성 검사 오류 메시지 표시 */}
+        {/* 이메일 */}
+        <div className="relative flex flex-col">
+          <label htmlFor="email" className={labelStyle}>이메일 주소</label>
+          <Mail className={iconStyle} />
+          <input 
+            type="email" name="email" className={inputStyle} 
+            placeholder="example@mail.com" value={formData.email} 
+            onChange={handleChange} required
+          />
+        </div>
+
+        {/* 비밀번호 */}
+        <div className="relative flex flex-col">
+          <label htmlFor="password" className={labelStyle}>비밀번호</label>
+          <Lock className={iconStyle} />
+          <input 
+            type="password" name="password" className={inputStyle} 
+            placeholder="8~16자 영문, 숫자, 특수문자" value={formData.password} 
+            onChange={handleChange} required
+          />
+        </div>
+
+        {/* 주소 */}
+        <div className="relative flex flex-col">
+          <label htmlFor="address" className={labelStyle}>주소</label>
+          <MapPin className={iconStyle} />
+          <input 
+            type="text" name="address" className={inputStyle} 
+            placeholder="서울시 강남구..." value={formData.address} 
+            onChange={handleChange} required
+          />
+        </div>
+
+        {/* 에러 메시지 (리스트 형태) */}
         {errors.length > 0 && (
-          <div className="alert alert-danger p-2 mb-3">
+          <div className="bg-red-50 border border-red-100 rounded-lg p-3 animate-in fade-in slide-in-from-top-2">
             {errors.map((msg, index) => (
-              <p key={index} className="fieldError mb-0 small">{msg}</p>
+              <p key={index} className="text-red-600 text-xs font-medium flex items-center gap-1">
+                • {msg}
+              </p>
             ))}
           </div>
         )}
 
         {/* 버튼 그룹 */}
-        <div className="button-group d-flex flex-column align-items-center gap-2 mt-4">
-          <button type="submit" className="btn btn-primary w-100" style={{ maxWidth: '300px' }}>
-            회원가입
+        <div className="flex flex-col gap-3 pt-4">
+          <button 
+            type="submit" 
+            className="w-full py-2.5 !bg-[#1d4ed8] !text-white !font-semibold !rounded-lg !shadow-md 
+                       hover:!bg-blue-700 hover:!scale-[1.02] active:!scale-[0.98] !transition-all duration-200"
+          >
+            회원가입 완료
           </button>
           
-          <a href={`${KAKAO_AUTH_URL}&state=join`} className="btn btn-warning w-100 d-flex justify-content-center align-items-center fw-medium" style={{ maxWidth: '300px', backgroundColor: '#FEE500', borderColor: '#FEE500', color: '#3C1E1E' }}>
-            <img 
-              src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_small.png" 
-              style={{ height: '1.2em', marginRight: '8px' }} alt="카카오 로고"
-            />
-            카카오로 회원가입
+          <a 
+            href={`${KAKAO_AUTH_URL}&state=join`} 
+            className="w-full py-2.5 !bg-[#FEE500] !text-[#191919] !font-semibold rounded-lg !flex !items-center !justify-center gap-2
+                       hover:!bg-[#fdd835] hover:!scale-[1.02] active:!scale-[0.98] transition-all duration-200"
+          >
+            <MessageCircle className="h-5 w-5 fill-current" />
+            카카오로 1초 가입하기
           </a>
         </div>
       </form>
-      <div className="text-center mt-3">
-        <p className="small text-muted mb-0">이미 계정이 있으신가요? <a href="/members/login">로그인</a></p>
+
+      <div className="!text-center !mt-6">
+        <p className="!text-sm !text-slate-500">
+          이미 계정이 있으신가요?{" "}
+          <Link to="/members/login" className="hover:!underline">
+            <span className="!text-blue-600 !font-medium">로그인하기</span>
+          </Link>
+        </p>
       </div>
     </AuthFormWrapper>
   );

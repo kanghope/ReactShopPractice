@@ -1,6 +1,6 @@
 import apiClient from '../config/axiosSetup.ts'; // 설정된 apiClient 인스턴스 사용
 import type { MemberForm, LoginRequest, TokenResponse } from '../types/member.ts';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 
 // 백엔드 API 기본 URL 설정
 const API_BASE_URL = '/members';

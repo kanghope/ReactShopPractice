@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { getOrderHistory, cancelOrderApi, cancelBulkOrders } from '../api/orderApi';
 import type { OrderHistDto, OrderStatus } from '../types/order';
 import type { PageResponse } from '../types/item';
+import { toast } from 'sonner';
 
 const MAX_PAGE_BUTTONS = 5;
 const PAGE_SIZE = 4;
@@ -28,6 +29,16 @@ export const useOrderHistory = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [selectedOrderIds, setSelectedOrderIds] = useState<Set<number>>(new Set());
+    const [selectOrderID, setSelectOrderID] = useState<number>(0);
+
+    // ⭐️ 모달 제어 상태 추가
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isModalOpenTotal, setIsModalOpenTotal] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({ 
+        isOpen: false, 
+        title: "", 
+        message: "" 
+    });
 
     const currentPage = useMemo(() => {
         const pageParam = searchParams.get('page');
@@ -98,13 +109,22 @@ export const useOrderHistory = () => {
             : setSelectedOrderIds(new Set(cancellableOrderIds));
     };
     
-    // 단일 주문 취소
-    const handleCancelOrder = async (orderId: number) => {
-        if (!window.confirm('정말로 주문을 취소하시겠습니까?')) return;
+
+    // 1. 삭제 버튼 클릭 시 호출 (모달만 띄움)
+    const openOrderModal = useCallback((orderId: number) => {
+        setSelectOrderID(orderId);
+        setIsModalOpen(true);
+    }, []);
+
+    // 단일 주문 취소orderId: number
+    const handleCancelOrder = async () => {
+        //if (!window.confirm('정말로 주문을 취소하시겠습니까?')) return;
 
         try {
-            await cancelOrderApi(orderId);
-            window.alert("주문이 취소되었습니다.");
+            await cancelOrderApi(selectOrderID);
+            //window.alert("주문이 취소되었습니다.");
+            toast.success("주문이 취소되었습니다.");
+            setIsModalOpen(false);
             loadOrderHistory(currentPage);
         } catch (err) {
             const errorMessage = (err instanceof Error && (err.cause as any)?.data?.message) || (err instanceof Error ? err.message : "주문 취소 실패");
@@ -112,17 +132,33 @@ export const useOrderHistory = () => {
             if (err instanceof Error && (err.cause as any)?.status === 401) navigate('/members/login');
         }
     };
+
+     // 2. 주문 버튼 클릭 시 호출할 함수 
+    const openOrderCancelModal = useCallback(() => {
+         const idsToCancel = Array.from(selectedOrderIds);
+        if (idsToCancel.length === 0) {
+            setAlertConfig({
+                isOpen: true,
+                title: "주문 취소",
+                message: "취소할 주문을 선택해주세요."
+            });
+            return;
+        }
+        setIsModalOpenTotal(true); // 주문 확인 모달 띄우기
+    }, [selectedOrderIds]);
     
     // 일괄 주문 취소
     const handleBulkCancel = async () => {
         const idsToCancel = Array.from(selectedOrderIds);
 
-        if (idsToCancel.length === 0) return window.alert('취소할 주문을 선택해주세요.');
-        if (!window.confirm(`${idsToCancel.length}건의 주문을 일괄 취소하시겠습니까?`)) return;
+        //if (idsToCancel.length === 0) return window.alert('취소할 주문을 선택해주세요.');
+        //if (!window.confirm(`${idsToCancel.length}건의 주문을 일괄 취소하시겠습니까?`)) return;
 
         try {
             const message = await cancelBulkOrders(idsToCancel);
-            window.alert(message);
+            //window.alert(message);
+            toast.success(message);
+            setIsModalOpenTotal(false);
             setSelectedOrderIds(new Set());
             loadOrderHistory(currentPage);
         } catch (err) {
@@ -166,5 +202,13 @@ export const useOrderHistory = () => {
         handleBulkCancel,
         toggleOrderSelection,
         toggleAllSelection,
+        isModalOpen, 
+        setIsModalOpen,
+        openOrderModal,
+        isModalOpenTotal, 
+        setIsModalOpenTotal,
+        alertConfig, 
+        setAlertConfig,
+        openOrderCancelModal
     };
 };

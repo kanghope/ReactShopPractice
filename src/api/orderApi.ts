@@ -17,7 +17,7 @@ export const orderItem = async (itemId: number, count: number): Promise<string> 
     const paramData = { itemId, count };
 
     try {
-        const response = await apiClient.post(url, paramData);
+        await apiClient.post(url, paramData);
         return "주문이 완료 되었습니다."; 
     } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
@@ -41,7 +41,7 @@ export const addCart = async (itemId: number, count: number): Promise<string> =>
     const paramData = { itemId, count };
 
     try {
-        const response = await apiClient.post(url, paramData);
+        await apiClient.post(url, paramData);
         return "상품을 장바구니에 담았습니다."; 
     } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
