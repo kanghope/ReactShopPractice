@@ -135,56 +135,47 @@ const ItemManagePage: React.FC = () => {
 
         const startPage = Math.floor(currentPage / maxPage) * maxPage + 1;
         let endPage = startPage + maxPage - 1;
-        if (endPage > totalPages) {
-            endPage = totalPages;
-        }
+        if (endPage > totalPages) endPage = totalPages;
 
         const pageNumbers = [];
-        for (let i = startPage; i <= endPage; i++) {
-            pageNumbers.push(i);
-        }
+        for (let i = startPage; i <= endPage; i++) pageNumbers.push(i);
 
         return (
-            <div className="d-flex justify-content-center">
-                <ul className="pagination">
+            <div className="flex justify-center !mt-10">
+                <nav className="flex items-center !gap-1 !bg-white !p-2 !rounded-2xl !shadow-sm !border !border-slate-200">
                     {/* Previous 버튼 */}
-                    <li className={`page-item ${itemPage.first ? 'disabled' : ''}`}>
-                        <a 
-                            className="page-link" 
-                            href="#" 
-                            onClick={(e) => { e.preventDefault(); !itemPage.first && handlePageChange(currentPage - 1); }}
-                        >
-                            <span aria-hidden='true'>Previous</span>
-                        </a>
-                    </li>
+                    <button 
+                        disabled={itemPage.first}
+                        onClick={(e) => { e.preventDefault(); !itemPage.first && handlePageChange(currentPage - 1); }}
+                        className="!px-4 !py-2 !text-sm !font-bold !text-slate-600 hover:!bg-slate-50 disabled:!opacity-30 disabled:hover:!bg-transparent !rounded-xl !transition-all !border-slate-200"
+                    >
+                        이전
+                    </button>
 
                     {/* 페이지 번호 버튼 */}
                     {pageNumbers.map(page => (
-                        <li 
-                            className={`page-item ${currentPage === page - 1 ? 'active' : ''}`} 
+                        <button 
                             key={page}
+                            onClick={(e) => { e.preventDefault(); handlePageChange(page - 1); }}
+                            className={`w-10 h-10 flex items-center justify-center !rounded-xl !text-sm !font-black !transition-all !border-slate-200 ${
+                                currentPage === page - 1 
+                                ? '!bg-slate-900 !text-white !shadow-lg !shadow-slate-200' 
+                                : '!text-slate-600 hover:!bg-slate-50'
+                            }`}
                         >
-                            <a 
-                                className="page-link" 
-                                href="#" 
-                                onClick={(e) => { e.preventDefault(); handlePageChange(page - 1); }}
-                            >
-                                {page}
-                            </a>
-                        </li>
+                            {page}
+                        </button>
                     ))}
 
                     {/* Next 버튼 */}
-                    <li className={`page-item ${itemPage.last ? 'disabled' : ''}`}>
-                        <a 
-                            className="page-link" 
-                            href="#" 
-                            onClick={(e) => { e.preventDefault(); !itemPage.last && handlePageChange(currentPage + 1); }}
-                        >
-                            <span aria-hidden='true'>Next</span>
-                        </a>
-                    </li>
-                </ul>
+                    <button 
+                        disabled={itemPage.last}
+                        onClick={(e) => { e.preventDefault(); !itemPage.last && handlePageChange(currentPage + 1); }}
+                        className="!px-4 !py-2 !text-sm !font-bold !text-slate-600 !hover:!bg-slate-50 disabled:!opacity-30 !outline-none disabled:!hover:!bg-transparent !rounded-xl !transition-all !border-slate-200"
+                    >
+                        다음
+                    </button>
+                </nav>
             </div>
         );
     };
@@ -218,62 +209,143 @@ const formatDateTime = (isoString : string) => {
     // -------------------------------------------------------------
 
     return (
-        <div className="container my-5">
-            <h2 className="h3 text-center mb-4 border-bottom pb-2">
-                <i className="bi bi-list-task me-2"></i> 상품 관리 목록
-            </h2>
-            
-            {loading ? (
-                <div className="text-center py-5">목록을 불러오는 중...</div>
-            ) : error ? (
-                <div className="alert alert-danger text-center py-5">{error}</div>
-            ) : (
-                <>
-                    <table className="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>상품아이디</th>
-                                <th>상품명</th>
-                                <th>상태</th>
-                                <th>등록자</th>
-                                <th>등록일</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {itemPage.content.length > 0 ? (
-                                itemPage.content.map(item => (
-                                    <tr key={item.id}>
-                                        <td>{item.id}</td>
-                                        <td>
-                                            <a href={`/admin/item/${item.id}`} 
-                                               onClick={(e) => { e.preventDefault(); navigate(`/admin/item/${item.id}`); }}>
-                                                {item.itemNm}
-                                            </a>
-                                        </td>
-                                        <td>{item.itemSellStatus === 'SELL' ? '판매중' : '품절'}</td>
-                                        <td>{item.createdBy}</td>
-                                        <td>{formatDateTime(item.regTime)}</td>
+        <div className="max-w-6xl mx-auto px-4 py-12">
+            {/* 상단 헤더 섹션 */}
+            {/* 상단 헤더 섹션 - 모바일에서 버튼이 아래로 내려가도록 조절 */}
+            <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-100 pb-8">
+                <div>
+                    <h2 className="text-3xl md:text-4xl !font-black !text-slate-900 !tracking-tight flex items-center !gap-3">
+                        <div className="!p-3 !bg-blue-600 !rounded-2xl !shadow-lg !shadow-blue-100 !text-white">
+                            <i className="!bi !bi-list-task text-xl md:text-2xl"></i>
+                        </div>
+                        상품 관리 목록
+                    </h2>
+                    <p className="!text-slate-500 !mt-3 !font-medium text-base md:text-lg">등록된 상품의 상태를 확인하고 정보를 수정할 수 있습니다.</p>
+                </div>
+                
+                <button 
+                    onClick={() => navigate('/admin/item/new')}
+                    className="h-12 w-full md:w-auto px-6 !bg-slate-900 !text-white rounded-xl !font-bold hover:!bg-blue-600 !transition-all !shadow-lg active:!scale-95"
+                >
+                    + 새 상품 등록
+                </button>
+            </div>
+
+            {/* 메인 컨텐츠 영역 */}
+            <div className="bg-white border border-slate-200 rounded-[1.5rem] md:rounded-[2.5rem] shadow-sm overflow-hidden transition-all hover:shadow-md">
+                {loading ? (
+                    <div className="text-center py-24 flex flex-col items-center gap-4">
+                        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                        <p className="text-slate-500 font-bold">상품 정보를 가져오는 중...</p>
+                    </div>
+                ) : error ? (
+                    <div className="text-center py-20 px-4">
+                        <div className="bg-red-50 text-red-600 p-6 rounded-3xl inline-block border border-red-100">
+                            <p className="font-black text-lg">⚠️ {error}</p>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        {/* 1. PC 테이블 (md 이상에서만 보임) */}
+                        <div className="hidden md:block overflow-x-auto">
+                            <table className="!w-full !text-left !border-collapse">
+                                <thead>
+                                    <tr className="!bg-slate-50/50 border-b border-slate-100">
+                                        <th className="!px-8 !py-5 !text-xs !font-black !text-slate-400 !uppercase tracking-wider">ID</th>
+                                        <th className="!px-8 !py-5 !text-xs !font-black !text-slate-400 !uppercase tracking-wider">상품 정보</th>
+                                        <th className="!px-8 !py-5 !text-xs !font-black !text-slate-400 !uppercase tracking-wider text-center">상태</th>
+                                        <th className="!px-8 !py-5 !text-xs !font-black !text-slate-400 !uppercase tracking-wider">등록자</th>
+                                        <th className="!px-8 !py-5 !text-xs !font-black !text-slate-400 !uppercase tracking-wider">등록일</th>
                                     </tr>
-                                ))
+                                </thead>
+                                <tbody className="!divide-y !divide-slate-50">
+                                    {itemPage.content.length > 0 ? (
+                                        itemPage.content.map(item => (
+                                            <tr key={item.id} className="group hover:bg-slate-300/80 transition-colors">
+                                                <td className="px-8 py-6 text-sm font-bold text-slate-400 italic">#{item.id}</td>
+                                                <td className="px-8 py-6">
+                                                    <a 
+                                                        href={`/admin/item/${item.id}`} 
+                                                        onClick={(e) => { e.preventDefault(); navigate(`/admin/item/${item.id}`); }}
+                                                        className="text-base font-black !text-slate-800 group-hover:!text-blue-600 transition-colors block !decoration-blue-500/30 underline-offset-4 hover:underline"
+                                                    >
+                                                        {item.itemNm}
+                                                    </a>
+                                                </td>
+                                                <td className="px-8 py-6 text-center">
+                                                    <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-black ${
+                                                        item.itemSellStatus === 'SELL' 
+                                                        ? '!bg-emerald-50 !text-emerald-600 !border !border-emerald-100' 
+                                                        : '!bg-red-50 !text-red-600 border !border-red-100'
+                                                    }`}>
+                                                        <span className={`w-1.5 h-1.5 rounded-full mr-2 ${item.itemSellStatus === 'SELL' ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
+                                                        {item.itemSellStatus === 'SELL' ? '판매중' : '품절'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-8 py-6 !text-sm !font-semibold !text-slate-600">{item.createdBy}</td>
+                                                <td className="px-8 py-6 !text-sm !font-medium !text-slate-400">{formatDateTime(item.regTime)}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr><td colSpan={5} className="px-8 py-20 text-center font-bold text-slate-400">조회된 상품이 없습니다.</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* 2. 모바일 카드 리스트 (md 미만에서 보임) */}
+                        <div className="md:hidden">
+                            {itemPage.content.length > 0 ? (
+                                <div className="divide-y divide-slate-100">
+                                    {itemPage.content.map(item => (
+                                        <div 
+                                            key={item.id} 
+                                            className="p-6 active:bg-slate-50 transition-colors cursor-pointer"
+                                            onClick={() => navigate(`/admin/item/${item.id}`)}
+                                        >
+                                            <div className="flex justify-between items-start mb-3">
+                                                <span className="text-xs font-bold text-slate-400 italic">#{item.id}</span>
+                                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black ${
+                                                    item.itemSellStatus === 'SELL' 
+                                                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
+                                                    : 'bg-red-50 text-red-600 border border-red-100'
+                                                }`}>
+                                                    {item.itemSellStatus === 'SELL' ? '판매중' : '품절'}
+                                                </span>
+                                            </div>
+                                            <h3 className="text-lg font-black text-slate-800 mb-4">{item.itemNm}</h3>
+                                            <div className="flex justify-between items-end">
+                                                <div className="space-y-1">
+                                                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Registered By</p>
+                                                    <p className="text-sm font-bold text-slate-600">{item.createdBy}</p>
+                                                </div>
+                                                <div className="text-right space-y-1">
+                                                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Date</p>
+                                                    <p className="text-sm font-medium text-slate-500">{formatDateTime(item.regTime)}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             ) : (
-                                <tr>
-                                    <td colSpan={5} className="text-center text-muted py-4">조회된 상품이 없습니다.</td>
-                                </tr>
+                                <div className="p-20 text-center font-bold text-slate-400">조회된 상품이 없습니다.</div>
                             )}
-                        </tbody>
-                    </table>
+                        </div>
+                    </>
+                )}
+            </div>
 
-                    {/* 페이징 네비게이션 */}
-                    {renderPagination()}
-                </>
-            )}
+            {/* 페이징 네비게이션 */}
+            {!loading && renderPagination()}
 
-            {/* 검색 폼 */}
-            <div className="d-flex justify-content-center mt-4">
-                <form className="form-inline d-flex gap-2" onSubmit={(e) => e.preventDefault()}>
-                    {/* 기간 검색 */}
-                    <select id="searchDateType" name="searchDateType" className="form-select" style={{ width: 'auto' }}
-                        value={searchForm.searchDateType} onChange={handleSearchChange}>
+            {/* 검색 섹션 - shadcn 스타일 필터 바 */}
+            <div className="mt-12 flex justify-center">
+                <div className="bg-slate-100/50 p-2 rounded-[2rem] border border-slate-200 inline-flex flex-wrap md:flex-nowrap items-center gap-2">
+                    <select 
+                        name="searchDateType" 
+                        className="bg-white border-none rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all cursor-pointer"
+                        value={searchForm.searchDateType} onChange={handleSearchChange}
+                    >
                         <option value="all">전체기간</option>
                         <option value="1d">1일</option>
                         <option value="1w">1주</option>
@@ -281,37 +353,46 @@ const formatDateTime = (isoString : string) => {
                         <option value="6m">6개월</option>
                     </select>
                     
-                    {/* 판매 상태 검색 */}
-                    <select id="searchSellStatus" name="searchSellStatus" className="form-select" style={{ width: 'auto' }}
-                        value={searchForm.searchSellStatus} onChange={handleSearchChange}>
-                        <option value="">판매상태(전체)</option>
+                    <select 
+                        name="searchSellStatus" 
+                        className="bg-white border-none rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all cursor-pointer"
+                        value={searchForm.searchSellStatus} onChange={handleSearchChange}
+                    >
+                        <option value="">상태(전체)</option>
                         <option value="SELL">판매</option>
                         <option value="SOLD_OUT">품절</option>
                     </select>
 
-                    {/* 검색 기준 */}
-                    <select id="searchBy" name="searchBy" className="form-select" style={{ width: 'auto' }}
-                        value={searchForm.searchBy} onChange={handleSearchChange}>
+                    <div className="h-8 w-[1px] bg-slate-200 mx-1 hidden md:block"></div>
+
+                    <select 
+                        name="searchBy" 
+                        className="bg-white border-none rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all cursor-pointer"
+                        value={searchForm.searchBy} onChange={handleSearchChange}
+                    >
                         <option value="itemNm">상품명</option>
                         <option value="createdBy">등록자</option>
                     </select>
+
+                    <div className="relative flex-grow min-w-[240px]">
+                        <input 
+                            name="searchQuery" 
+                            type="text" 
+                            className="w-full bg-white border-none rounded-2xl px-5 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                            placeholder="찾으시는 상품을 입력하세요..."
+                            value={searchForm.searchQuery}
+                            onChange={handleSearchChange}
+                        />
+                    </div>
                     
-                    {/* 검색어 입력 */}
-                    <input 
-                        id="searchQuery"
-                        name="searchQuery" 
-                        type="text" 
-                        className="form-control" 
-                        placeholder="검색어를 입력해주세요"
-                        value={searchForm.searchQuery}
-                        onChange={handleSearchChange}
-                    />
-                    
-                    {/* 검색 버튼 */}
-                    <button id="searchBtn" type="submit" className="btn btn-primary" onClick={handleSearchSubmit}>
+                    <button 
+                        type="submit" 
+                        onClick={handleSearchSubmit}
+                        className="!px-8 !py-3 !bg-blue-600 !text-white !rounded-2xl !font-black !text-sm hover:!bg-blue-700 !transition-all !shadow-md active:!scale-95"
+                    >
                         검색
                     </button>
-                </form>
+                </div>
             </div>
         </div>
     );

@@ -77,6 +77,7 @@ export const getItemDetail = async (itemId: number): Promise<ItemFormDto> => {
         // NOTE: response.data는 서버에서 받은 순수한 Item DTO 타입으로 가정합니다.
         // 클라이언트-전용 필드(itemImgFiles)를 추가하기 위해 응답 데이터 타입을 명시적으로 ItemFormDto에서 
         // 클라이언트-전용 필드를 제외한 타입으로 받는 것이 더 안전합니다. (여기서는 타입 분리가 필요)
+        //Omit은 TypeScript에서 제공하는 유틸리티 타입 중 하나로, 단어 뜻 그대로 "특정 속성만 제거(생략)한 새로운 타입을 만들 때" 사용합니다.
         const response = await apiClient.get<Omit<ItemFormDto, 'itemImgFiles'>>(`${API_ADMIN_BASE_URL}/${itemId}`);
         
         // 서버에서 받은 Item DTO에 클라이언트 폼 상태 관리를 위한 itemImgFiles 필드를 추가하여 ItemFormDto를 완성합니다.

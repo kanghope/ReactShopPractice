@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Layout from '../../components/layout/Layout';
 import { getItemDetail, registerItem, updateItem } from '../../api/itemApi.ts';
 import type { ItemFormDto, ItemImgDto } from '../../types/item.ts'; 
+import { AlertCircle, ImageIcon, Loader2, Package, RefreshCw, Save } from 'lucide-react';
+import { toast } from 'sonner';
 
 // 초기 폼 상태 정의
 const initialItemImgDtoList: ItemImgDto[] = Array(5).fill(null).map((_, index) => ({
@@ -184,7 +185,8 @@ const ItemFormPage: React.FC = () => {
                 ? await updateItem(id, form) // ⬅️ updateItem 함수는 PUT 요청을 보내야 함
                 : await registerItem(form); // ⬅️ registerItem 함수는 POST 요청을 보내야 함
 
-            alert(isEditMode ? `상품 수정 성공: ${resultMessage}` : `상품 등록 성공: ${resultMessage}`);
+            //alert(isEditMode ? `상품 수정 성공: ${resultMessage}` : `상품 등록 성공: ${resultMessage}`);
+            toast.success(isEditMode ? `상품 수정 성공: ${resultMessage}` : `상품 등록 성공: ${resultMessage}`);
             navigate('/admin/item/items'); 
 
         } catch (error) {
@@ -207,162 +209,168 @@ const ItemFormPage: React.FC = () => {
         }
     };
 
+    // 이미지 라벨 텍스트 처리 함수 (가독성을 위해 분리)
+    const getImageLabel = (imgDto: ItemImgDto, file: File | null) => {
+        if (file) return file.name;
+        if (imgDto.oriImgName) return imgDto.oriImgName;
+        return isEditMode ? '이미지 교체' : '파일 선택';
+    };
 
     if (loading) {
-        return <Layout><div className="text-center py-5">상품 정보를 불러오는 중...</div></Layout>;
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+                <Loader2 className="animate-spin text-blue-600" size={40} />
+                <p className="text-slate-500 font-medium animate-pulse">상품 정보를 불러오고 있습니다...</p>
+            </div>
+        );
     }
 
-    const pageTitle = isEditMode ? '수정' : '등록';
-    const submitButtonText = `상품 ${pageTitle}`;
-    const submitButtonClass = isEditMode ? 'btn-success' : 'btn-primary';
+    //const pageTitle = isEditMode ? '수정' : '등록';
+    //const submitButtonText = `상품 ${pageTitle}`;
+    //const submitButtonClass = isEditMode ? 'btn-success' : 'btn-primary';
 
     return (
-        <div className="container my-5">
-            <div className="row justify-content-center">
-                <div className="col-md-10 col-lg-8">
+        <div className="max-w-4xl mx-auto px-4 py-12">
+            {/* 헤더 섹션 */}
+            <div className="mb-8 flex items-center justify-between border-b border-slate-100 pb-6">
+                <div>
+                    <h1 className="text-3xl font-black text-slate-900 flex items-center gap-3">
+                        <Package className="text-blue-600" size={32} />
+                        상품 {isEditMode ? '수정' : '등록'}
+                    </h1>
+                    <p className="text-slate-500 mt-2 font-medium">관리자 전용 상품 관리 시스템</p>
+                </div>
+            </div>
 
-                    <div className="card shadow-lg p-4">
+            <div className="bg-white border border-slate-200 rounded-[2rem] shadow-sm overflow-hidden transition-all">
+                <div className="p-8 md:p-12">
+                    {/* 에러 알림 */}
+                    {submitError && (
+                        <div className="mb-8 flex items-center gap-3 p-4 bg-red-50 border border-red-100 text-red-700 rounded-2xl animate-in fade-in slide-in-from-top-2">
+                            <AlertCircle size={20} className="flex-shrink-0" />
+                            <p className="text-sm font-bold">{submitError}</p>
+                        </div>
+                    )}
 
-                        <p className="h3 text-center mb-4 border-bottom pb-2">
-                            <i className="bi bi-box-seam me-2"></i> 상품 <span className="text-primary">{pageTitle}</span>
-                        </p>
-
-                        {/* 전체 오류 메시지 표시 */}
-                        {submitError && (
-                            <div className="alert alert-danger p-2 mb-3">
-                                <p className="fieldError mb-0 small">⚠️ {submitError}</p>
-                            </div>
-                        )}
-                        
-                        <form onSubmit={handleSubmit}>
-
-                            {/* ID Hidden Field */}
-                            {isEditMode && (
-                                <input type="hidden" name="id" value={formData.id || ''} />
-                            )}
-                            {/* CSRF 토큰은 axiosSetup.ts에서 자동으로 처리한다고 가정하고 여기서는 생략합니다. */}
-
-
-                            {/* 상품 판매 상태 */}
-                            <div className="mb-3">
-                                <label htmlFor="itemSellStatus" className="form-label">상품 판매 상태</label>
-                                <select 
-                                    name="itemSellStatus" 
-                                    className="form-select"
-                                    value={formData.itemSellStatus}
-                                    onChange={handleChange}
-                                >
-                                    <option value="SELL">판매중</option>
-                                    <option value="SOLD_OUT">품절</option>
-                                </select>
+                    <form onSubmit={handleSubmit} className="space-y-8">
+                        {/* 그리드 레이아웃: 상태, 명칭, 가격, 재고 */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {/* 판매 상태 */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-slate-700 ml-1">판매 상태</label>
+                                <div className="relative">
+                                    <select 
+                                        name="itemSellStatus" 
+                                        className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium appearance-none"
+                                        value={formData.itemSellStatus}
+                                        onChange={handleChange}
+                                    >
+                                        <option value="SELL">판매중</option>
+                                        <option value="SOLD_OUT">품절</option>
+                                    </select>
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                        <RefreshCw size={16} />
+                                    </div>
+                                </div>
                             </div>
 
                             {/* 상품명 */}
-                            <div className="mb-3">
-                                <label htmlFor="itemNm" className="form-label">상품명</label>
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-slate-700 ml-1">상품명</label>
                                 <input 
-                                    type="text" 
-                                    name="itemNm" 
-                                    className={`form-control ${fieldErrors.itemNm ? 'is-invalid' : ''}`} 
-                                    placeholder="상품명을 입력해주세요" 
-                                    value={formData.itemNm}
-                                    onChange={handleChange}
+                                    type="text" name="itemNm"
+                                    className={`w-full h-12 px-4 bg-slate-50 border rounded-xl outline-none transition-all focus:ring-2 ${
+                                        fieldErrors.itemNm ? 'border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:ring-blue-500/20 focus:border-blue-500'
+                                    }`}
+                                    value={formData.itemNm} onChange={handleChange}
                                 />
-                                {fieldErrors.itemNm && (
-                                    <p className="fieldError mt-1">{fieldErrors.itemNm}</p>
-                                )}
+                                {fieldErrors.itemNm && <p className="text-xs text-red-500 font-bold ml-1">{fieldErrors.itemNm}</p>}
                             </div>
 
-                            {/* 가격 */}
-                            <div className="mb-3">
-                                <label htmlFor="price" className="form-label">가격</label>
-                                <input 
-                                    type="number" 
-                                    name="price" 
-                                    className={`form-control ${fieldErrors.price ? 'is-invalid' : ''}`}
-                                    placeholder="상품의 가격을 입력해주세요"
-                                    value={formData.price === null ? '' : formData.price}
-                                    onChange={handleChange}
-                                />
-                                {fieldErrors.price && (
-                                    <p className="fieldError mt-1">{fieldErrors.price}</p>
-                                )}
+                            {/* 가격 & 재고 (동일한 스타일 패턴 적용) */}
+                            {['price', 'stockNumber'].map((field) => (
+                                <div key={field} className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-700 ml-1">
+                                        {field === 'price' ? '가격' : '재고 수량'}
+                                    </label>
+                                    <div className="relative">
+                                        <input 
+                                            type="number" name={field}
+                                            className={`w-full h-12 pl-4 pr-12 bg-slate-50 border rounded-xl outline-none transition-all focus:ring-2 ${
+                                                fieldErrors[field] ? 'border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:ring-blue-500/20 focus:border-blue-500'
+                                            }`}
+                                            value={(formData as any)[field] ?? ''} 
+                                            onChange={handleChange}
+                                        />
+                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">
+                                            {field === 'price' ? '원' : 'EA'}
+                                        </span>
+                                    </div>
+                                    {fieldErrors[field] && <p className="text-xs text-red-500 font-bold ml-1">{fieldErrors[field]}</p>}
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* 상세 내용 */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-700 ml-1">상품 상세 내용</label>
+                            <textarea 
+                                name="itemDetail" rows={5}
+                                className={`w-full p-4 bg-slate-50 border rounded-2xl outline-none transition-all focus:ring-2 resize-none ${
+                                    fieldErrors.itemDetail ? 'border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:ring-blue-500/20 focus:border-blue-500'
+                                }`}
+                                value={formData.itemDetail} onChange={handleChange}
+                            />
+                        </div>
+
+                        {/* 이미지 업로드 영역 - 가장 에러가 많이 나는 부분 수정 */}
+                        <div className="space-y-4 pt-6 border-t border-slate-100">
+                            <div className="flex items-center gap-2 text-blue-600 font-black">
+                                <ImageIcon size={20} />
+                                <h3>상품 이미지 (최대 5개)</h3>
                             </div>
-
-                            {/* 재고 수량 */}
-                            <div className="mb-3">
-                                <label htmlFor="stockNumber" className="form-label">재고 수량</label>
-                                <input 
-                                    type="number" 
-                                    name="stockNumber" 
-                                    className={`form-control ${fieldErrors.stockNumber ? 'is-invalid' : ''}`}
-                                    placeholder="상품의 재고를 입력해주세요"
-                                    value={formData.stockNumber === null ? '' : formData.stockNumber}
-                                    onChange={handleChange}
-                                />
-                                {fieldErrors.stockNumber && (
-                                    <p className="fieldError mt-1">{fieldErrors.stockNumber}</p>
-                                )}
-                            </div>
-
-                            {/* 상품 상세 내용 */}
-                            <div className="mb-3">
-                                <label htmlFor="itemDetail" className="form-label">상품 상세 내용</label>
-                                <textarea 
-                                    className={`form-control ${fieldErrors.itemDetail ? 'is-invalid' : ''}`}
-                                    rows={5} 
-                                    name="itemDetail" 
-                                    placeholder="상세 내용을 입력해주세요"
-                                    value={formData.itemDetail}
-                                    onChange={handleChange}
-                                />
-                                {fieldErrors.itemDetail && (
-                                    <p className="fieldError mt-1">{fieldErrors.itemDetail}</p>
-                                )}
-                            </div>
-
-                            <h5 className="mb-3 mt-4 text-info">상품 이미지 등록</h5>
-
-                            {/* 이미지 입력 필드 반복 (총 5개) */}
-                            {formData.itemImgDtoList.map((imgDto, index) => {
-                                const file = formData.itemImgFiles[index];
-                                const labelText = file?.name 
-                                    || imgDto.oriImgName 
-                                    || (isEditMode ? '새로운 이미지 선택' : '선택된 파일 없음');
-
-                                return (
-                                    <div className="mb-3" key={index}>
-                                        <label className="form-label text-muted">상품 이미지 {index + 1}</label>
-                                        <div className="input-group">
-                                            <input 
-                                                type="file" 
-                                                // file input은 uncontrolled component로 두거나 value를 null로 설정해야 합니다.
-                                                // React에서 파일 인풋은 fileList를 다루므로 value를 직접 설정하지 않습니다.
-                                                className="form-control custom-file-input" 
-                                                name={`itemImgFile${index}`}
-                                                onChange={(e) => handleFileChange(e, index)}
-                                            />
-                                            {/* 수정 모드에서 기존 이미지가 있는 경우, ID를 hidden 필드로 전송 (DTO로 대체될 수 있음) */}
-                                            {isEditMode && imgDto.id !== null && (
-                                                <input type="hidden" name="itemImgIds" value={imgDto.id} />
-                                            )}
-                                            <label className="input-group-text custom-file-label">
-                                                {labelText}
+                            
+                            <div className="grid grid-cols-1 gap-3">
+                                {formData.itemImgDtoList.map((imgDto, index) => (
+                                    <div key={index} className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-dashed border-slate-200 hover:border-blue-400 transition-all group">
+                                        <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-400 font-bold text-xs shadow-sm border border-slate-100">
+                                            {index + 1}
+                                        </div>
+                                        <div className="flex-grow">
+                                            <label className="cursor-pointer block">
+                                                <span className={`text-sm font-semibold ${getImageLabel(imgDto, formData.itemImgFiles[index]) !== '파일 선택' ? 'text-blue-600' : 'text-slate-400'}`}>
+                                                    {getImageLabel(imgDto, formData.itemImgFiles[index])}
+                                                </span>
+                                                <input 
+                                                    type="file" 
+                                                    className="hidden" 
+                                                    onChange={(e) => handleFileChange(e, index)}
+                                                />
                                             </label>
                                         </div>
+                                        <div className="text-[10px] font-black uppercase px-2 py-1 rounded bg-white text-slate-300 group-hover:text-blue-500 border border-slate-100 transition-colors">
+                                            {index === 0 ? "Main" : "Sub"}
+                                        </div>
                                     </div>
-                                );
-                            })}
-
-
-                            {/* 버튼 그룹 */}
-                            <div className="d-grid gap-2 col-6 mx-auto mt-4">
-                                <button type="submit" className={`btn ${submitButtonClass} btn-lg`}>
-                                    <i className={`bi bi-${isEditMode ? 'arrow-up-circle' : 'save'} me-2`}></i> {submitButtonText}
-                                </button>
+                                ))}
                             </div>
-                        </form>
-                    </div>
+                        </div>
+
+                        {/* 제출 버튼 */}
+                        <div className="pt-8 flex justify-center">
+                            <button 
+                                type="submit" 
+                                className={`w-full max-w-sm h-14 flex items-center justify-center gap-3 rounded-2xl font-black text-lg transition-all active:scale-95 shadow-lg ${
+                                    isEditMode 
+                                    ? '!bg-emerald-600 hover:!bg-emerald-700 !text-white !shadow-emerald-100' 
+                                    : '!bg-slate-900 hover:!bg-blue-700 !text-white !shadow-slate-200'
+                                }`}
+                            >
+                                {isEditMode ? <RefreshCw size={22} /> : <Save size={22} />}
+                                상품 {isEditMode ? '수정' : '등록'} 완료
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

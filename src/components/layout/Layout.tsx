@@ -14,19 +14,30 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    // 'd-flex flex-column min-vh-100' 클래스는 Header/Footer 고정을 위해 사용됩니다.
-    // CSS, Bootstrap CDN은 index.html 또는 최상위 파일에 포함되어야 합니다.
-    <div className="d-flex flex-column min-vh-100">
+    /* flex flex-col: 수직 정렬
+      min-h-screen: 최소 높이를 화면 전체로 설정 (푸터를 바닥에 고정)
+      bg-white: 전체 배경색 설정
+    */
+    <div className="flex flex-col min-h-screen bg-white">
       
-      {/* 1. 헤더 영역 (th:replace="fragments/header::header") */}
+      {/* 1. 헤더 영역 */}
       <Header />
 
-      {/* 2. 본문 콘텐츠 영역 (layout:fragment="content") */}
-      <main className="flex-grow-1 container mt-4 mb-5">
-        {children}
+      {/* 2. 본문 콘텐츠 영역
+        flex-grow: 남은 공간을 모두 차지 (푸터를 아래로 밀어냄)
+        mx-auto: 수평 중앙 정렬
+        w-full max-w-[1400px]: 헤더/푸터와 동일한 최대 너비 유지
+        px-4: 모바일 좌우 여백
+        py-8 lg:py-12: 모바일과 PC에서 서로 다른 상하 여백 (반응형)
+      */}
+      <main className="flex-grow w-full max-w-[1400px] mx-auto px-4 py-8 lg:py-12">
+        {/* 콘텐츠가 부드럽게 나타나도록 애니메이션 추가 가능 */}
+        <div className="animate-in fade-in duration-500">
+          {children}
+        </div>
       </main>
 
-      {/* 3. 푸터 영역 (th:replace="fragments/footer::footer") */}
+      {/* 3. 푸터 영역 */}
       <Footer />
     </div>
   );

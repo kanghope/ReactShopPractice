@@ -3,14 +3,16 @@ import { createRoot } from 'react-dom/client'
 //import './index.css'
 import App from './App.tsx'
 
-// ⭐️ 부트스트랩 CSS Import 추가 (npm/yarn으로 설치된 경우)
-import 'bootstrap/dist/css/bootstrap.min.css';
+// 1. 부트스트랩 CSS (기본 틀)
+//import 'bootstrap/dist/css/bootstrap.min.css';
+//import 'bootstrap-icons/font/bootstrap-icons.css'; 
 
-// ⭐️ Bootstrap Icons도 설치했다면 Import
-import 'bootstrap-icons/font/bootstrap-icons.css'; 
+// 2. 기존 전역 CSS (커스텀 스타일)
+//import './styles/layout1.css';
 
-// ⭐️ 기존 Thymeleaf의 layout1.css에 해당하는 전역 CSS 파일을 import (아래 3번 참고)
-import './styles/layout1.css';
+// 3. ⭐️ 테일윈드 & shadcn/ui CSS (가장 마지막에 위치해야 함!)
+// 주석을 해제하고 반드시 가장 아래에 배치하세요.
+import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

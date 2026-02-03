@@ -1,6 +1,6 @@
 // App.tsx
-
 import React from 'react';
+import { Toaster } from './components/ui/sonner.tsx';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth'; // Context Provider
 import Layout from './components/layout/Layout';
@@ -18,13 +18,19 @@ import ItemDetailPage from './pages/item/ItemDetailPage'; // ⬅️ 이 부분�
 import OrderHistoryPage from './pages/order/OrderHistoryPage';
 // 장바구이 이력 페이지 컴포넌트 임포트 추가
 import CartPage from './pages/cart/CartPage';
+import { Provider } from 'react-redux';
+import { store } from './store';
 
 const App: React.FC = () => {
   return (
-    // 1. 라우팅 환경 제공
+    <Provider store={store}>       {/* 1등: 리덕스 엔진 주입 */}
+    <Toaster richColors position="top-center" toastOptions={{
+    style: { zIndex: 9999 }, // 다른 레이어보다 무조건 위에 오도록
+  }} />
+    {/* 1. 라우팅 환경 제공*/}
     <Router>
       {/* 2. 인증 Context 제공 (App 전체에서 인증 상태 접근 가능) */}
-      <AuthProvider>
+      <AuthProvider >
         {/* 3. 전체 레이아웃 적용 (Header와 Footer 포함) */}
         <Layout>
           <Routes>
@@ -64,7 +70,9 @@ const App: React.FC = () => {
           </Routes>
         </Layout>
       </AuthProvider>
+      
     </Router>
+    </Provider>
   );
 };
 

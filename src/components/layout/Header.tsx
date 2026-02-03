@@ -1,142 +1,185 @@
-import React, { useState, type FormEvent } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-// useAuth.tsx 파일이 생성되었으므로 확장자를 명시합니다.
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth.tsx'; 
 
+// shadcn/ui 컴포넌트
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+
+// 아이콘
+import { Menu, Store, Search, LogOut } from "lucide-react";
+
 const Header: React.FC = () => {
-const [searchQuery, setSearchQuery] = useState('');
-// ⭐️ Bootstrap Navbar Collapse 상태 관리를 위한 훅
-const [isNavCollapsed, setIsNavCollapsed] = useState(true);
-const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
+  //const location = useLocation();
+  const { isAuthenticated, isAdmin, logout } = useAuth(); 
 
-const location = useLocation(); // ⭐️ 현재 URL 경로 가져오기
-// AuthContext에서 인증 상태와 관리자 여부를 가져옵니다.
-const {  isAuthenticated, isAdmin, logout } = useAuth(); 
-
-const handleSearch = (e: FormEvent) => {
- e.preventDefault();
- // 검색 쿼리를 URL 파라미터로 메인 페이지로 이동
- navigate(`/?searchQuery=${searchQuery}`);
-};
-
-const handleLogout = (e: React.MouseEvent) => {
- e.preventDefault();
- logout(); // AuthContext의 로그아웃 함수 호출 (토큰 제거)
- console.log('로그아웃되었습니다.'); 
- navigate('/');
-}
-
-// ⭐️ 현재 경로와 링크 경로를 비교하여 active 클래스 반환 (이제 사용됩니다)
- const getNavLinkClass = (path: string) => {
-   // 메인 페이지('/')의 경우 쿼리스트링 제거 후 비교
-   const currentPath = location.pathname.split('?')[0]; 
-   return currentPath === path ? 'nav-link active' : 'nav-link';
- };
- 
-// ⭐️ Navbar 토글 핸들러
- const handleNavCollapse = () => setIsNavCollapsed(!isNavCollapsed);
- 
-// ⭐️ 링크 클릭 시 네비게이션이 닫히도록 하는 핸들러 (모바일 UX 개선)
-  const handleLinkClick = () => {
-    if (!isNavCollapsed) {
-        setIsNavCollapsed(true);
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/?searchQuery=${searchQuery}`);
     }
   };
 
-return (
- <div className="header">
- <nav className="navbar navbar-expand-md navbar-light bg-light shadow-sm border-bottom">
-  <div className="container-fluid">
-  {/* 로고 / 브랜드 */}
-  <Link className="navbar-brand text-uppercase fw-bold" to="/" onClick={handleLinkClick}>
-   <i className="bi bi-shop me-2"></i> Shop
-  </Link>
 
-  {/* ⭐️ 토글 버튼 */}
-          <button 
-            className="navbar-toggler" 
-            type="button" 
-            onClick={handleNavCollapse} // React 핸들러
-            aria-controls="navbarContent" 
-            aria-expanded={!isNavCollapsed} // 상태 반영
-            aria-label="Toggle navigation"
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
+  const navItemStyle = "inline-flex items-center justify-center px-2 py-2 text-sm font-medium transition-all duration-200 ease-in-out text-slate-600 rounded-md  hover:!fill-white hover:!scale-110 hover:shadow-md active:!scale-95 ";
 
-  <div className={`collapse navbar-collapse ${!isNavCollapsed ? 'show' : ''}`} id="navbarContent"
-          >
-   {/* 왼쪽 메뉴 그룹 (관리자/로그인 사용자 전용) */}
-   <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-  
-   {/* 상품 등록/관리 (관리자 전용) */}
-   {isAdmin && (
-    <>
-    <li className="nav-item">
-            {/* ⭐️ getNavLinkClass 적용 */}
-     <Link className={getNavLinkClass("/admin/item/new")} to="/admin/item/new" onClick={handleLinkClick}>상품 등록</Link>
-    </li>
-    <li className="nav-item">
-            {/* ⭐️ getNavLinkClass 적용 */}
-     <Link className={getNavLinkClass("/admin/item/items")} to="/admin/item/items" onClick={handleLinkClick}>상품 관리</Link>
-    </li>
-    </>
-   )}
-  
-   {/* 장바구니/구매이력 (인증된 사용자 전용) */}
-   {isAuthenticated && (
-    <>
-    <li className="nav-item">
-            {/* ⭐️ getNavLinkClass 적용 */}
-     <Link className={getNavLinkClass("/cart")} to="/cart" onClick={handleLinkClick}>장바구니</Link>
-    </li>
-    <li className="nav-item">
-            {/* ⭐️ getNavLinkClass 적용 */}
-     <Link className={getNavLinkClass("/orders")} to="/orders" onClick={handleLinkClick}>구매이력</Link>
-    </li>
-    </>
-   )}
-   </ul>
+  return (
+    /* Bootstrap의 navbar-light bg-light shadow-sm 재현 */
+    <header className="w-full border-b border-slate-200 bg-[#f8f9fa] sticky top-0 z-50 shadow-sm">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        
+        {/* --- 1. 브랜드/로고 (navbar-brand) --- */}
+        <div className="flex items-center gap-8">
+          <Link to="/" className="flex items-center gap-2 text-lg font-bold text-slate-800 uppercase tracking-tighter">
+            <Store className="h-5 w-5 text-blue-600" />
+            <span>Shop</span>
+          </Link>
 
-   {/* 오른쪽 메뉴 그룹 (인증/검색) */}
-   <ul className="navbar-nav d-flex align-items-center">
-   {/* 로그인/로그아웃 버튼 */}
-   <li className="nav-item me-2">
-    {
-            /* ⭐️ 오류 해결: JSX 조건부 렌더링 부분을 괄호로 감싸 JSX 요소임을 명확히 합니다. */
-            !isAuthenticated ? (
-       // 익명 사용자 (isAnonymous())
-                <Link className={getNavLinkClass("/members/login") + " btn btn-outline-dark"} to="/members/login" onClick={handleLinkClick}>로그인</Link>
-     ) : (
-       // 인증된 사용자 (isAuthenticated())
-       <a className="nav-link btn btn-outline-dark" href="#" onClick={(e) => { handleLogout(e); handleLinkClick(); }}>
-         로그아웃
-       </a>
-     )
-        }
-   </li>
+          {/* --- 2. 데스크탑 네비게이션 (md 이상에서만 보임) --- */}
+          <nav className="hidden md:flex items-center gap-6">
+            {isAdmin && (
+              <>
+                <Link to="/admin/item/new" className={navItemStyle}>상품 등록</Link>
+                <Link to="/admin/item/items" className={navItemStyle}>상품 관리</Link>
+              </>
+            )}
+            {isAuthenticated && (
+              <>
+                <Link to="/cart" className={navItemStyle}>장바구니</Link>
+                <Link to="/orders"  
+                className={navItemStyle}>구매이력</Link>
+              </>
+            )}
+          </nav>
+        </div>
 
-   {/* 검색 폼 */}
-   <li className="nav-item">
-    <form className="d-flex" onSubmit={handleSearch}>
-    <input
-     name="searchQuery"
-     className="form-control me-2"
-     type="search"
-     placeholder="상품 검색"
-     aria-label="Search"
-     value={searchQuery}
-     onChange={(e) => setSearchQuery(e.target.value)}
-    />
-    <button className="btn btn-secondary" type="submit">검색</button>
-    </form>
-   </li>
-   </ul>
-  </div>
-  </div>
- </nav>
- </div>
-);
+        {/* --- 3. 우측 액션 영역 (검색 + 버튼) --- */}
+        <div className="flex items-center justify-center gap-3">
+          
+          {/* 데스크탑 검색 (lg 이상) */}
+          <form onSubmit={handleSearch} className="hidden lg:flex items-center gap-2">
+            <div className="relative w-64 md:w-80">
+            {/* 검색어가 없을 때만 돋보기 아이콘 표시 */}
+            {!searchQuery && (
+                <Search className="!absolute !left-3 top-1/2 -translate-y-1/2 !text-slate-400 group-focus-within:!text-blue-600 !transition-colors" />
+            )}
+            
+            <input
+                type="search"
+                placeholder={searchQuery ? "" : "상품 검색"}
+                className="w-full h-10 pl-10 pr-3 !bg-white border !border-slate-300 rounded-lg !text-sm !outline-none focus:!ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+            />
+        </div>
+            <Button type="submit" variant="outline" className=" px-3 
+             !bg-white !text-slate-600 !border-slate-300
+             transition-all duration-200 ease-in-out 
+             hover:!scale-110 
+             active:!scale-95">
+              검색
+            </Button>
+          </form>
+
+          {/* 로그인/로그아웃 버튼 (데스크탑 전용) */}
+          <div className="hidden md:flex items-center border-l border-slate-300 ml-2 pl-4">
+            {!isAuthenticated ? (
+              <Button asChild variant="outline" size="sm" 
+              className="border-slate-300 text-slate-600 hover:text-white
+              transition-all 
+               duration-200 ease-in-out 
+                hover:!scale-110 
+                active:!scale-95">
+                <Link to="/members/login">로그인</Link>
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm" onClick={() => logout()} 
+              className="gap-2 border-slate-300 
+               text-slate-600 
+               transition-all 
+               duration-200 ease-in-out 
+                hover:!scale-110 
+                active:!scale-95">
+                <LogOut className="h-4 w-4" />
+                로그아웃
+              </Button>
+            )}
+          </div>
+
+          {/* --- 4. 모바일 네비게이션 (햄버거 버튼) --- */}
+          <div className="md:hidden flex items-center">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="border border-slate-300">
+                  <Menu className="h-6 w-6 text-slate-600" />
+                  <span className="sr-only">메뉴 열기</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="bg-[#f8f9fa] w-[40%]">
+                <SheetHeader>
+                  <SheetTitle className="text-left border-b pb-4 text-slate-800">Shop Menu</SheetTitle>
+                </SheetHeader>
+                
+                <div className="flex flex-col gap-4 mt-6">
+                  {/* 모바일 검색바 */}
+                  <form onSubmit={handleSearch} className="relative w-full">
+                    {!searchQuery && (
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    )}
+                    
+                    <Input
+                      type="search"
+                      placeholder="    상품 검색"
+                      className="w-full pl-10 bg-white"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </form>
+
+                  <nav className="flex flex-col gap-2">
+                    <Link to="/" className="p-2 text-slate-700 hover:bg-slate-200 rounded-md">홈으로</Link>
+                    {isAdmin && (
+                      <>
+                        <Link to="/admin/item/new" className="p-2 text-slate-700 hover:bg-slate-200 rounded-md">상품 등록</Link>
+                        <Link to="/admin/item/items" className="p-2 text-slate-700 hover:bg-slate-200 rounded-md">상품 관리</Link>
+                      </>
+                    )}
+                    {isAuthenticated && (
+                      <>
+                        <Link to="/cart" className="p-2 text-slate-700 hover:bg-slate-200 rounded-md">장바구니</Link>
+                        <Link to="/orders" className="p-2 text-slate-700 hover:bg-slate-200 rounded-md">구매이력</Link>
+                      </>
+                    )}
+                  </nav>
+
+                  <div className="h-px !bg-slate-300 my-2" />
+
+                  {!isAuthenticated ? (
+                    <Button asChild className="w-full !text-white">
+                      <Link to="/members/login"><span className='!text-white'>로그인</span></Link>
+                    </Button>
+                  ) : (
+                    <Button variant="destructive" onClick={() => logout()} className="w-full gap-2">
+                      <LogOut className="h-4 w-4" /> 로그아웃
+                    </Button>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
 };
 
 export default Header;

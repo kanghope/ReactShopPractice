@@ -1,10 +1,13 @@
 import React, { useEffect, useState, type FormEvent } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import AuthFormWrapper from '../../components/common/AuthFormWrapper';
 import { loginMember } from '../../api/memberApi';
 import { type LoginRequest } from '../../types/member.ts';
 import { useAuth } from '../../hooks/useAuth'; // 인증 상태 관리 훅
 import { type UserRole } from '../../types/auth'; // UserRole 타입 추가
+import { MessageCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button.tsx';
+import { toast } from 'sonner';
 
 
 const initialFormState: LoginRequest = {
@@ -20,14 +23,15 @@ const initialFormState: LoginRequest = {
 const KAKAO_CLIENT_ID = import.meta.env.REACT_APP_KAKAO_CLIENT_ID || '41995ca715ee4777c817d8ba08ac344f';
 // 카카오 로그인이 완료되면 이 주소로 인가 코드(Code)를 가지고 리다이렉트 됩니다.
 // 이 주소는 Spring Boot의 소셜 로그인 처리 REST API 경로와 일치해야 합니다.
-const KAKAO_REDIRECT_URI = import.meta.env.REACT_APP_KAKAO_REDIRECT_URI || 'http://localhost:8080/api/auth/kakao/callback';
-
+const KAKAO_REDIRECT_URI = import.meta.env.REACT_APP_KAKAO_REDIRECT_URI ||
+ 'https://shop-app1.azurewebsites.net/api/auth/kakao/callback';
+//'http://localhost:8080/api/auth/kakao/callback' 
 const KAKAO_AUTH_URL = 
   `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}`;
 // =========================================================================
 
 
-const MemberLoginPage: React.FC = () => {
+const MemberLoginPage = () => {
     const [formData, setFormData] = useState<LoginRequest>(initialFormState);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null); // 성공 메시지 상태 추가
@@ -73,18 +77,20 @@ const MemberLoginPage: React.FC = () => {
             
             // 2. AuthContext의 login 함수를 호출하여 사용자 정보(ID, ROLE) 저장
             login(
-                tokenResponse.accessToken, 
-                tokenResponse.refreshToken, 
+                //tokenResponse.accessToken, 
+                //tokenResponse.refreshToken, 
                 tokenResponse.id.toString(), // memberId를 string으로 변환하여 userId로 사용
                 tokenResponse.role as UserRole 
             );
             
             // ⭐️ Custom Message UI 사용
             setSuccessMessage('로그인 성공! 잠시 후 메인 페이지로 이동합니다.');
+            toast.success('로그인 되었습니다.');
             // 성공 메시지 표시 후 1초 뒤 이동
             setTimeout(() => {
                 navigate('/'); 
-            }, 1000);
+            }, 3000);
+            //toast.success('로그인 되었습니다.')
         
         } catch (err) {
             // 3. 로그인 실패 시 에러 메시지 표시
@@ -114,62 +120,74 @@ const MemberLoginPage: React.FC = () => {
             setError(errorMessage);
         }
     };
+    // 공통 스타일 정의
+    const inputStyle = "w-full px-4 py-2 bg-white border border-slate-200 rounded-lg outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 placeholder:text-slate-400";
+    const labelStyle = "block text-sm font-medium text-slate-700 mb-1.5 ml-1";
+    
 
     return (
         <AuthFormWrapper title="로그인">
-            <form onSubmit={handleSubmit} method="post">
+            <form onSubmit={handleSubmit} method="post" className="space-y-5">
                 {/* 이메일 */}
-                <div className="form-group mb-3">
-                    <label htmlFor="email">이메일주소</label>
+                <div className="flex flex-col">
+                    <label htmlFor="email" className={labelStyle}>이메일 주소</label>
                     <input
-                        type="email" name="email" className="form-control"
-                        placeholder="이메일을 입력해주세요" value={formData.email}
-                        onChange={handleChange} required
-                    />
-                </div>
-                {/* 비밀번호 */}
-                <div className="form-group mb-4">
-                    <label htmlFor="password">비밀번호</label>
-                    <input
-                        type="password" name="password" className="form-control"
-                        placeholder="비밀번호를 입력해주세요" value={formData.password}
+                        type="email" name="email" id="email"
+                        className={inputStyle}
+                        placeholder="example@mail.com" value={formData.email}
                         onChange={handleChange} required
                     />
                 </div>
 
-                {/* 오류 메시지 표시 */}
-                {error && (
-                    <div className="alert alert-danger p-2 mb-3">
-                        <p className="fieldError mb-0 small">{error}</p>
-                    </div>
-                )}
-              
-                {/* 성공 메시지 표시 (alert 대체) */}
-                {successMessage && (
-                    <div className="alert alert-success p-2 mb-3">
-                        <p className="mb-0 small">{successMessage}</p>
+                {/* 비밀번호 */}
+                <div className="flex flex-col">
+                    <label htmlFor="password" className={labelStyle}>비밀번호</label>
+                    <input
+                        type="password" name="password" id="password"
+                        className={inputStyle}
+                        placeholder="••••••••" value={formData.password}
+                        onChange={handleChange} required
+                    />
+                </div>
+
+                {/* 에러/성공 메시지 */}
+                {(error || successMessage) && (
+                    <div className={`p-3 rounded-lg text-sm font-medium animate-in fade-in slide-in-from-top-1 ${
+                        error ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-50 text-green-600 border border-green-100'
+                    }`}>
+                        {error || successMessage}
                     </div>
                 )}
 
                 {/* 버튼 그룹 */}
-                <div className="button-group d-flex flex-column align-items-center gap-2 mt-4">
-                    <button type="submit" className="btn btn-primary w-100" style={{ maxWidth: '300px' }}>
+                <div className="flex flex-col gap-3 !pt-2">
+                    <Button 
+                        type="submit" 
+                        className="w-full py-2.5 !bg-[#1d4ed8] !text-white !font-semibold rounded-lg !shadow-md 
+                                   hover:!bg-blue-700 hover:!scale-[1.02] active:!scale-[0.98] transition-all duration-200"
+                    >
                         로그인
-                    </button>
+                    </Button>
                     
-                    {/* ⭐️ 카카오 소셜 로그인 버튼 ⭐️ */}
-                    <a href={KAKAO_AUTH_URL} className="btn btn-warning w-100" style={{ maxWidth: '300px' }}>
-                        <img
-                            src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_small.png"
-                            style={{ height: '1.2em', marginRight: '8px' }} alt="카카오 로고"
-                        />
-                        카카오로 로그인
+                    <a 
+                        href={KAKAO_AUTH_URL} 
+                        className="w-full py-2.5 !bg-[#FEE500] !text-[#191919] !font-semibold rounded-lg flex items-center justify-center gap-2
+                                   hover:!bg-[#fdd835] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                    >
+                        <MessageCircle className="h-5 w-5 fill-current" />
+                        카카오로 시작하기
                     </a>
-                    
-                    <div className="d-flex justify-content-between w-100 mt-2" style={{ maxWidth: '300px' }}>
-                        <a href="/members/new" className="text-muted small">회원가입</a>
-                        <a href="/findPassword" className="text-muted small">비밀번호 찾기</a>
-                    </div>
+                </div>
+
+                {/* 하단 링크 */}
+                <div className="flex justify-between items-center px-1 mt-6">
+                    <Link to="/members/new" className="">
+                        <span className='!text-sm !text-slate-500 hover:!text-blue-600 hover:!underline transition-colors'>회원가입</span>
+                    </Link>
+                    {/*findPassword */}
+                    <Link to="/" className="">
+                        <span className='!text-sm !text-slate-500 hover:!text-blue-600 hover:!underline !transition-colors'>비밀번호 찾기</span>
+                    </Link>
                 </div>
             </form>
         </AuthFormWrapper>
