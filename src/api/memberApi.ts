@@ -27,6 +27,7 @@ export const registerMember = async (data: MemberForm): Promise<string> => {
 
     } catch (error) 
     {
+        
         // AxiosError를 ErrorResponseData 타입으로 단언하여 메시지에 접근합니다.
         if (axios.isAxiosError(error) && error.response) {
             const status = error.response.status;
@@ -66,6 +67,17 @@ export const registerMember = async (data: MemberForm): Promise<string> => {
                 cause: { status, data: errorData }
             });
         }
+       /*
+        if(axios.isAxiosError(error) && error.response)
+        {
+            const status = error.response.status;
+            const errorData = error.response.data;// 서버에서 보낸 List 또는 Map
+            // 핵심: 문자열로 변환하지 말고 원본 데이터를 'cause'에 담아 던짐
+            throw new Error('VALIDATION_ERROR',{
+                cause: {status, data: errorData}
+            });
+
+        }*/
         throw new Error('네트워크 오류가 발생했습니다.');
     }
 };
